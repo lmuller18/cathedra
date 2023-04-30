@@ -1,51 +1,54 @@
-import { type Kit } from "@prisma/client";
-import { type CheckedState } from "@radix-ui/react-checkbox";
-import { MinusSquare, PlusSquare } from "lucide-react";
-import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { AspectRatio } from "~/components/ui/aspect-ratio";
+import { useState } from "react";
+import { type NextPage } from "next";
+import { type Kit } from "@prisma/client";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type CheckedState } from "@radix-ui/react-checkbox";
+import { Loader2, MinusSquare, PlusSquare } from "lucide-react";
+
+import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
+import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import { type RouterInputs, api } from "~/utils/api";
+import { Separator } from "~/components/ui/separator";
+import { AspectRatio } from "~/components/ui/aspect-ratio";
+import { GRADES, SCALES, SERIES, STATUSES, getStatusByCode } from "~/lib/utils";
 import {
   Card,
-  CardContent,
-  CardDescription,
+  CardTitle,
   CardFooter,
   CardHeader,
-  CardTitle,
+  CardContent,
+  CardDescription,
 } from "~/components/ui/card";
-import { Checkbox } from "~/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import {
   Select,
-  SelectContent,
-  SelectGroup,
   SelectItem,
+  SelectGroup,
   SelectLabel,
-  SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectTrigger,
 } from "~/components/ui/select";
-import { Separator } from "~/components/ui/separator";
-import { GRADES, SCALES, SERIES, STATUSES, getStatusByCode } from "~/lib/utils";
-import { type RouterInputs, api } from "~/utils/api";
+import {
+  Sheet,
+  SheetTitle,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTrigger,
+  SheetDescription,
+} from "~/components/ui/sheet";
+import { CreateKitSchema, UpdateKitKitSchema } from "~/lib/server-types";
 
 const Collection: NextPage = () => {
   const [filters, setFilters] = useState<RouterInputs["kit"]["getAll"]>({
@@ -54,8 +57,10 @@ const Collection: NextPage = () => {
     series: [],
     statuses: [],
   });
-  const { data: kits, isLoading: isLoadingKits } =
-    api.kit.getAll.useQuery(filters);
+  const { data: kits, isLoading: isLoadingKits } = api.kit.getAll.useQuery(
+    filters,
+    { keepPreviousData: true }
+  );
 
   const updateFilters = (
     property: "grades" | "scales" | "series" | "statuses",
@@ -107,6 +112,7 @@ const Collection: NextPage = () => {
 
       <AspectRatio className="bg-muted" ratio={16 / 3}>
         <Image
+          priority
           src="/images/hangar-1.jpg"
           fill
           className="object-cover [object-position:center_20%]"
@@ -293,36 +299,248 @@ interface CollectionCardProps {
 }
 
 const CollectionCard = (props: CollectionCardProps) => {
+  const [open, setOpen] = useState(false);
+
+  const utils = api.useContext();
+  const { mutate, isLoading: isSubmitting } = api.kit.updateKit.useMutation({
+    async onMutate(updatedKit) {
+      // Cancel outgoing fetches (so they don't overwrite our optimistic update)
+      await utils.kit.getAll.cancel();
+
+      // Get the data from the queryCache
+      const prevData = utils.kit.getAll.getData();
+
+      // Optimistically update the data with our new post
+      utils.kit.getAll.setData(undefined, (old) =>
+        old?.map((k) =>
+          k.id === updatedKit.id ? { ...k, ...updatedKit.kit } : k
+        )
+      );
+
+      // Return the previous data so we can revert if something goes wrong
+      return { prevData };
+    },
+    onError(err, newPost, ctx) {
+      if (ctx) {
+        // If the mutation fails, use the context-value from onMutate
+        utils.kit.getAll.setData(undefined, ctx.prevData);
+      }
+    },
+    onSuccess() {
+      setOpen(false);
+      return utils.kit.getAll.invalidate();
+    },
+  });
+
+  const { register, handleSubmit, control } = useForm<
+    RouterInputs["kit"]["updateKit"]["kit"]
+  >({
+    defaultValues: {
+      grade: props.kit.grade,
+      image: props.kit.image,
+      name: props.kit.name,
+      scale: props.kit.scale,
+      series: props.kit.series,
+      status: props.kit.status,
+    },
+    resolver: zodResolver(UpdateKitKitSchema),
+  });
+
+  const onSubmit = (data: RouterInputs["kit"]["updateKit"]["kit"]) => {
+    const image = data.image;
+
+    mutate({
+      id: props.kit.id,
+      kit: {
+        ...data,
+        image: image && image.length ? image : null,
+      },
+    });
+  };
+
   return (
-    <Card className="overflow-hidden">
-      <AspectRatio ratio={4 / 3} className="bg-muted-foreground">
-        <Image
-          fill
-          // loader={() => "/images/gundam-placeholder.png"}
-          src={props.kit.image ?? "/images/gundam-placeholder.png"}
-          className="object-cover"
-          alt={props.kit.name}
-        />
-      </AspectRatio>
-      <CardHeader>
-        <CardTitle>{props.kit.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>
-            {props.kit.grade} {props.kit.scale}
-          </Badge>
-          <Separator orientation="vertical" className="h-4" />
-          <Badge variant="outline" className="whitespace-nowrap">
-            {props.kit.series}
-          </Badge>
-          <Separator orientation="vertical" className="h-4" />
-          <Badge variant="outline">
-            {getStatusByCode(props.kit.status)?.label}
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
+    <Sheet open={open} onOpenChange={(o) => setOpen(o)}>
+      <SheetTrigger asChild>
+        <Card className="overflow-hidden">
+          <AspectRatio ratio={4 / 3} className="bg-muted-foreground">
+            <Image
+              fill
+              src={props.kit.image ?? "/images/gundam-placeholder.png"}
+              className="object-cover"
+              alt={props.kit.name}
+            />
+          </AspectRatio>
+          <CardHeader>
+            <CardTitle>{props.kit.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge>
+                {props.kit.grade} {props.kit.scale}
+              </Badge>
+              <Separator orientation="vertical" className="h-4" />
+              <Badge variant="outline" className="whitespace-nowrap">
+                {props.kit.series}
+              </Badge>
+              <Separator orientation="vertical" className="h-4" />
+              <Badge variant="outline">
+                {getStatusByCode(props.kit.status)?.label}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </SheetTrigger>
+      <SheetContent position="right" className="w-full sm:w-1/2 lg:w-1/3">
+        <SheetHeader>
+          <SheetTitle>Edit Kit Details</SheetTitle>
+          <SheetDescription>
+            Adjust the details of one of your kits
+          </SheetDescription>
+        </SheetHeader>
+        <form
+          onSubmit={(e) =>
+            void handleSubmit(onSubmit, (err) => console.log(err))(e)
+          }
+        >
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                {...register("name")}
+                placeholder="Kit name"
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="image" className="text-right">
+                Image
+              </Label>
+              <Input
+                id="image"
+                {...register("image")}
+                placeholder="Image link"
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="grade" className="text-right">
+                Grade
+              </Label>
+              <Controller
+                control={control}
+                name="grade"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="grade" placeholder="Select a grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Grades</SelectLabel>
+                        {GRADES.map((grades) => (
+                          <SelectItem key={grades.code} value={grades.code}>
+                            {grades.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="series" className="text-right">
+                Series
+              </Label>
+              <Controller
+                control={control}
+                name="series"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="series" placeholder="Select a series" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Series</SelectLabel>
+                        {SERIES.map((series) => (
+                          <SelectItem key={series.code} value={series.code}>
+                            {series.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="scale" className="text-right">
+                Scale
+              </Label>
+              <Controller
+                control={control}
+                name="scale"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="scale" placeholder="Select a scale" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Scales</SelectLabel>
+                        {SCALES.map((scale) => (
+                          <SelectItem key={scale.code} value={scale.code}>
+                            {scale.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="Status" className="text-right">
+                Status
+              </Label>
+              <Controller
+                control={control}
+                name="status"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="status" placeholder="Select a status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Status</SelectLabel>
+                        {STATUSES.map((status) => (
+                          <SelectItem key={status.code} value={status.code}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+          <SheetFooter>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Update Kit
+            </Button>
+          </SheetFooter>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -341,180 +559,182 @@ const FilterExpansionToggle = (props: FilterExpansionToggleProps) => {
 };
 
 const AddKit = () => {
+  const [open, setOpen] = useState(false);
   const utils = api.useContext();
   const { mutate } = api.kit.createKit.useMutation({
     onSuccess() {
-      void utils.kit.getAll.invalidate();
+      setOpen(false);
+      return utils.kit.getAll.invalidate();
     },
   });
 
-  const [formState, setFormState] = useState<RouterInputs["kit"]["createKit"]>({
-    grade: "",
-    image: null,
-    name: "",
-    scale: "",
-    series: "",
-    status: "",
+  const { register, handleSubmit, control } = useForm<
+    RouterInputs["kit"]["createKit"]
+  >({
+    resolver: zodResolver(CreateKitSchema),
   });
 
-  const formValid = useMemo(() => {
-    for (const key in formState) {
-      if (
-        key !== "image" &&
-        typeof formState[key as keyof typeof formState] !== "string"
-      )
-        return false;
-      const value = formState[key as keyof typeof formState];
-      if (key === "image") continue;
-      if (value == null || value.length === 0) return false;
-    }
-    return true;
-  }, [formState]);
-
-  const updateForm = (key: keyof typeof formState, value: string) => {
-    if (key === "image") {
-      setFormState((f) => ({
-        ...f,
-        image: value.length === 0 ? null : value,
-      }));
-    } else {
-      setFormState((f) => ({
-        ...f,
-        [key]: value,
-      }));
-    }
-  };
-
-  const createKit = () => {
-    mutate(formState);
+  const onSubmit = (data: RouterInputs["kit"]["updateKit"]["kit"]) => {
+    const image = data.image;
+    mutate({
+      ...data,
+      image: image && image.length ? image : null,
+    });
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={(o) => setOpen(o)}>
+      <SheetTrigger asChild>
         <Button>Add Kit</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add kit</DialogTitle>
-          <DialogDescription>
+      </SheetTrigger>
+      <SheetContent position="right" className="w-full sm:w-1/2 lg:w-1/3">
+        <SheetHeader>
+          <SheetTitle>Add kit</SheetTitle>
+          <SheetDescription>
             Add a gundam kit to your collection. Click save when you&apos;re
             done.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              placeholder="Kit name"
-              className="col-span-3"
-              onChange={(e) => updateForm("name", e.target.value)}
-            />
+          </SheetDescription>
+        </SheetHeader>
+        <form
+          onSubmit={(e) =>
+            void handleSubmit(onSubmit, (err) => console.log(err))(e)
+          }
+        >
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                {...register("name")}
+                placeholder="Kit name"
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="image" className="text-right">
+                Image
+              </Label>
+              <Input
+                id="image"
+                {...register("image")}
+                placeholder="Image link"
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="grade" className="text-right">
+                Grade
+              </Label>
+              <Controller
+                control={control}
+                name="grade"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="grade" placeholder="Select a grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Grades</SelectLabel>
+                        {GRADES.map((grades) => (
+                          <SelectItem key={grades.code} value={grades.code}>
+                            {grades.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="series" className="text-right">
+                Series
+              </Label>
+              <Controller
+                control={control}
+                name="series"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="series" placeholder="Select a series" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Series</SelectLabel>
+                        {SERIES.map((series) => (
+                          <SelectItem key={series.code} value={series.code}>
+                            {series.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="scale" className="text-right">
+                Scale
+              </Label>
+              <Controller
+                control={control}
+                name="scale"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="scale" placeholder="Select a scale" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Scales</SelectLabel>
+                        {SCALES.map((scale) => (
+                          <SelectItem key={scale.code} value={scale.code}>
+                            {scale.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="Status" className="text-right">
+                Status
+              </Label>
+              <Controller
+                control={control}
+                name="status"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="status" placeholder="Select a status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Status</SelectLabel>
+                        {STATUSES.map((status) => (
+                          <SelectItem key={status.code} value={status.code}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="image" className="text-right">
-              Image
-            </Label>
-            <Input
-              id="image"
-              placeholder="Image link"
-              className="col-span-3"
-              onChange={(e) => updateForm("image", e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="grade" className="text-right">
-              Grade
-            </Label>
-            <Select onValueChange={(val) => updateForm("grade", val)}>
-              <SelectTrigger id="grade" className="col-span-3">
-                <SelectValue placeholder="Select a grade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Grades</SelectLabel>
-                  {GRADES.map((grades) => (
-                    <SelectItem key={grades.code} value={grades.code}>
-                      {grades.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="series" className="text-right">
-              Series
-            </Label>
-            <Select onValueChange={(val) => updateForm("series", val)}>
-              <SelectTrigger id="series" className="col-span-3">
-                <SelectValue placeholder="Select a series" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Series</SelectLabel>
-                  {SERIES.map((series) => (
-                    <SelectItem key={series.code} value={series.code}>
-                      {series.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="scale" className="text-right">
-              Scale
-            </Label>
-            <Select onValueChange={(val) => updateForm("scale", val)}>
-              <SelectTrigger id="scale" className="col-span-3">
-                <SelectValue placeholder="Select a scale" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Scales</SelectLabel>
-                  {SCALES.map((scale) => (
-                    <SelectItem key={scale.code} value={scale.code}>
-                      {scale.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Status" className="text-right">
-              Status
-            </Label>
-            <Select onValueChange={(val) => updateForm("status", val)}>
-              <SelectTrigger id="status" className="col-span-3">
-                <SelectValue placeholder="Select a status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Status</SelectLabel>
-                  <SelectItem value="Wishlist">Wishlist</SelectItem>
-                  <SelectItem value="Ordered">Ordered</SelectItem>
-                  <SelectItem value="Owned">Owned</SelectItem>
-                  <SelectItem value="Assembled">Assembled</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button onClick={createKit} disabled={!formValid}>
-              Create Kit
-            </Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <SheetFooter>
+            <Button type="submit">Create Kit</Button>
+          </SheetFooter>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 };
 

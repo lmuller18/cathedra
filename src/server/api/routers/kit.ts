@@ -1,20 +1,9 @@
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { CreateKitSchema, UpdateKitSchema } from "~/lib/server-types";
 
-import {
-  createTRPCRouter,
-  publicProcedure,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const kitRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
   getAll: publicProcedure
     .input(
       z
@@ -27,8 +16,6 @@ export const kitRouter = createTRPCRouter({
         .optional()
     )
     .query(({ ctx, input }) => {
-      console.log(input);
-
       return ctx.prisma.kit.findMany({
         where: input
           ? {
@@ -58,18 +45,8 @@ export const kitRouter = createTRPCRouter({
     };
   }),
   createKit: publicProcedure
-    .input(
-      z.object({
-        name: z.string(),
-        grade: z.string(),
-        scale: z.string(),
-        status: z.string(),
-        image: z.string().nullable().optional(),
-        series: z.string(),
-      })
-    )
+    .input(CreateKitSchema)
     .mutation(({ ctx, input }) => {
-      console.log("in create kit", input);
       return ctx.prisma.kit.create({
         data: {
           ...input,
@@ -77,7 +54,15 @@ export const kitRouter = createTRPCRouter({
         },
       });
     }),
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
-  }),
+  updateKit: publicProcedure
+    .input(UpdateKitSchema)
+    .mutation(({ ctx, input }) => {
+      return ctx.prisma.kit.update({
+        where: { id: input.id },
+        data: {
+          ...input.kit,
+          userId: "user-1",
+        },
+      });
+    }),
 });
