@@ -8,10 +8,17 @@ await import("./src/env.mjs");
 const config = {
   images: {
     remotePatterns: [
+      { hostname: "via.placeholder.com" },
+      { hostname: "www.hlj.com" },
       {
-        hostname: "via.placeholder.com",
+        protocol: "https",
+        hostname: "**",
       },
     ],
+  },
+  experimental: {
+    typedRoutes: true,
+    esmExternals: false,
   },
   reactStrictMode: true,
 

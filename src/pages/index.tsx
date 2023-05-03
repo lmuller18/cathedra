@@ -109,7 +109,7 @@ const HeroSection = () => {
   const selectedModel = models[activeIndex % models.length];
 
   return (
-    <section className="bg-gray-900">
+    <section>
       <div className="container relative mx-auto px-6 py-16">
         <div className="lg:flex lg:justify-between">
           <div className="lg:w-1/2">

@@ -22,13 +22,20 @@ model Kit {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    name   String
-    image  String?
-    status String
-    grade  String
-    scale  String
-    series String
-    user   User?   @relation(fields: [userId], references: [id])
+    name         String
+    image        String?
+    status       String
+    grade        String
+    scale        String
+    series       String
+    link         String?
+    backlogOrder Int?
+    user         User?   @relation(fields: [userId], references: [id])
+
+    // status === ordered
+    orderedDate DateTime?
+    // status === wishlist / ordered
+    releaseDate DateTime?
 
     userId String?
 }

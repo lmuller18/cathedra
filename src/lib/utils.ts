@@ -13,7 +13,7 @@ export const GRADES = [
   { code: "EG", label: "Entry Grade" },
   { code: "SD", label: "Super Deformed" },
   { code: "NG", label: "No Grade" },
-];
+] as const;
 
 export function getGradeByCode(code: string) {
   return GRADES.find((g) => g.code === code);
@@ -31,7 +31,7 @@ export const SERIES = [
   { code: "G Gundam", name: "G Gundam" },
   { code: "Age", name: "Gundam Age" },
   { code: "F91", name: "Gundam F91" },
-];
+] as const;
 
 export function getSeriesByCode(code: string) {
   return SERIES.find((s) => s.code === code);
@@ -43,7 +43,7 @@ export const SCALES = [
   { code: "1/60", label: "1/60" },
   { code: "1/48", label: "1/48" },
   { code: "Nonscale", label: "Nonscale" },
-];
+] as const;
 
 export function getScaleByCode(code: string) {
   return SCALES.find((s) => s.code === code);
@@ -54,7 +54,7 @@ export const STATUSES = [
   { code: "ORDERED", label: "Ordered" },
   { code: "OWNED", label: "Owned" },
   { code: "ASSEMBLED", label: "Assembled" },
-];
+] as const;
 
 export function getStatusByCode(code: string) {
   return STATUSES.find((s) => s.code === code);

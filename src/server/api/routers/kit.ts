@@ -1,10 +1,13 @@
 import { z } from "zod";
 import { CreateKitSchema, UpdateKitSchema } from "~/lib/server-types";
-
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
 
 export const kitRouter = createTRPCRouter({
-  getAll: publicProcedure
+  getAll: protectedProcedure
     .input(
       z
         .object({
@@ -12,21 +15,43 @@ export const kitRouter = createTRPCRouter({
           scales: z.string().array().optional(),
           series: z.string().array().optional(),
           statuses: z.string().array().optional(),
+          page: z.number().optional(),
+          pageSize: z.number().optional(),
+          includeBacklog: z.boolean().optional(),
         })
         .optional()
     )
     .query(({ ctx, input }) => {
+      // default page size IF pagination is requested
+      const DEFAULT_PAGE_SIZE = 10;
+
+      let pageInput = {};
+      if (input?.page != null || input?.pageSize != null) {
+        const pageSize = input.pageSize ?? DEFAULT_PAGE_SIZE;
+        const page = input.page ?? 0;
+        pageInput = {
+          take: pageSize,
+          skip: pageSize * page,
+        };
+      }
+
       return ctx.prisma.kit.findMany({
         where: input
           ? {
+              userId: ctx.session.user.id,
               grade: input.grades?.length ? { in: input.grades } : undefined,
               scale: input.scales?.length ? { in: input.scales } : undefined,
               series: input.series?.length ? { in: input.series } : undefined,
               status: input.statuses?.length
                 ? { in: input.statuses }
                 : undefined,
+              backlogOrder:
+                input.includeBacklog != null || input.includeBacklog
+                  ? undefined
+                  : { equals: null },
             }
-          : {},
+          : { userId: ctx.session.user.id },
+        ...pageInput,
       });
     }),
   getFilterOptions: publicProcedure.query(async ({ ctx }) => {
@@ -44,25 +69,45 @@ export const kitRouter = createTRPCRouter({
       statuses: statuses.map((s) => s.status),
     };
   }),
-  createKit: publicProcedure
+  getById: protectedProcedure.input(z.string()).query(({ ctx, input }) => {
+    return ctx.prisma.kit.findFirst({
+      where: { id: input, userId: ctx.session.user.id },
+    });
+  }),
+  createKit: protectedProcedure
     .input(CreateKitSchema)
     .mutation(({ ctx, input }) => {
       return ctx.prisma.kit.create({
         data: {
           ...input,
-          userId: "user-1",
+          userId: ctx.session.user.id,
         },
       });
     }),
-  updateKit: publicProcedure
+  updateKit: protectedProcedure
     .input(UpdateKitSchema)
     .mutation(({ ctx, input }) => {
       return ctx.prisma.kit.update({
         where: { id: input.id },
         data: {
           ...input.kit,
-          userId: "user-1",
+          userId: ctx.session.user.id,
         },
       });
     }),
+  getBacklog: protectedProcedure.query(({ ctx }) => {
+    return ctx.prisma.kit.findMany({
+      where: {
+        status: "OWNED",
+        backlogOrder: { not: null },
+        userId: ctx.session.user.id,
+      },
+      orderBy: { backlogOrder: "asc" },
+    });
+  }),
+  deleteKit: protectedProcedure.input(z.string()).mutation(({ ctx, input }) => {
+    return ctx.prisma.kit.deleteMany({
+      where: { id: input, userId: ctx.session.user.id },
+    });
+  }),
 });

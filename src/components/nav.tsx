@@ -1,0 +1,160 @@
+import {
+  User,
+  Home,
+  LogOut,
+  Settings,
+  CreditCard,
+  PlusCircle,
+} from "lucide-react";
+import { signIn, signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import NavLink from "~/components/ui/nav-link";
+import { Skeleton } from "~/components/ui/skeleton";
+import { cn } from "~/lib/utils";
+
+const Nav = () => (
+  <div className="border-b">
+    <div className="flex h-16 items-center px-4">
+      <NavItems />
+      <div className="ml-auto flex items-center space-x-4">
+        <UserMenu />
+      </div>
+    </div>
+  </div>
+);
+
+const NavItems = () => (
+  <nav className="mx-6 flex items-center space-x-4 lg:space-x-6">
+    <Link href="/">
+      <Home
+        height={16}
+        width={16}
+        className="-mr-2 transition-colors hover:text-primary"
+      />
+    </Link>
+    <NavLink
+      href="/collection"
+      className={({ isActive }) =>
+        cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          !isActive && "text-muted-foreground"
+        )
+      }
+    >
+      Collection
+    </NavLink>
+    <NavLink
+      href="/backlog"
+      className={({ isActive }) =>
+        cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          !isActive && "text-muted-foreground"
+        )
+      }
+    >
+      Backlog
+    </NavLink>
+    {/* <NavLink
+      href="/examples/dashboard"
+      className={({ isActive }) =>
+        cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          !isActive && "text-muted-foreground"
+        )
+      }
+    >
+      Products
+    </NavLink>
+    <NavLink
+      href="/examples/dashboard"
+      className={({ isActive }) =>
+        cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          !isActive && "text-muted-foreground"
+        )
+      }
+    >
+      Settings
+    </NavLink> */}
+  </nav>
+);
+
+const UserMenu = () => {
+  const { data: session, status } = useSession();
+  if (status === "loading")
+    return (
+      <Avatar>
+        <Skeleton className="h-full w-full" />
+      </Avatar>
+    );
+
+  if (!session) return <Button onClick={() => void signIn()}>Sign In</Button>;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            {session.user.image && (
+              <AvatarImage src={session.user.image} alt={session.user.name} />
+            )}
+            <AvatarFallback>{session.user.name.slice(1)}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {session.user.name}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {session.user.email}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <CreditCard className="mr-2 h-4 w-4" />
+            <span>Billing</span>
+            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            <span>New Team</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => void signOut()}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+export default Nav;

@@ -1,12 +1,20 @@
 import { z } from "zod";
 
 export const UpdateKitKitSchema = z.object({
-  name: z.string(),
-  grade: z.string(),
-  scale: z.string(),
-  status: z.string(),
+  name: z.string().min(1, { message: "Grade is required" }),
+  grade: z
+    .string({ required_error: "Grade is required" })
+    .min(1, { message: "Grade is required" }),
+  scale: z
+    .string({ required_error: "Scale is required" })
+    .min(1, { message: "Scale is required" }),
+  status: z
+    .string({ required_error: "Status is required" })
+    .min(1, { message: "Status is required" }),
   image: z.string().nullable().optional(),
-  series: z.string(),
+  series: z
+    .string({ required_error: "Series is required" })
+    .min(1, { message: "Series is required" }),
 });
 
 export const UpdateKitSchema = z.object({
@@ -15,10 +23,18 @@ export const UpdateKitSchema = z.object({
 });
 
 export const CreateKitSchema = z.object({
-  name: z.string(),
-  grade: z.string(),
-  scale: z.string(),
-  status: z.string(),
+  name: z.string().min(1, { message: "Name is required" }),
+  grade: z
+    .string({ required_error: "Grade is required" })
+    .min(1, { message: "Grade is required" }),
+  scale: z
+    .string({ required_error: "Scale is required" })
+    .min(1, { message: "Scale is required" }),
+  status: z
+    .string({ required_error: "Status is required" })
+    .min(1, { message: "Status is required" }),
   image: z.string().nullable().optional(),
-  series: z.string(),
+  series: z
+    .string({ required_error: "Series is required" })
+    .min(1, { message: "Series is required" }),
 });
