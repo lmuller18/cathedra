@@ -1,36 +1,18 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { type Kit } from "@prisma/client";
-import { Loader2 } from "lucide-react";
-import { type NextPage } from "next";
 import Image from "next/image";
-import { useRouter } from "next/router";
 import { useState } from "react";
+import { type NextPage } from "next";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/router";
+import { type Kit } from "@prisma/client";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+
+import { UpdateKitKitSchema } from "~/lib/server-types";
+
 import Nav from "~/components/nav";
 import ProgressStepper from "~/components/progress-stepper";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "~/components/ui/sheet";
-import { UpdateKitKitSchema } from "~/lib/server-types";
+
+import { type RouterInputs, api } from "~/utils/api";
 import {
   GRADES,
   SCALES,
@@ -39,10 +21,32 @@ import {
   getSeriesByCode,
   getStatusByCode,
 } from "~/lib/utils";
-import { AspectRatio } from "~/ui/aspect-ratio";
+
+import { Label } from "~/ui/label";
 import { Badge } from "~/ui/badge";
+import { Input } from "~/ui/input";
+import { Button } from "~/ui/button";
 import { Separator } from "~/ui/separator";
-import { type RouterInputs, api } from "~/utils/api";
+import { AspectRatio } from "~/ui/aspect-ratio";
+import { ScrollArea, ScrollBar } from "~/ui/scroll-area";
+import {
+  Select,
+  SelectItem,
+  SelectGroup,
+  SelectLabel,
+  SelectValue,
+  SelectContent,
+  SelectTrigger,
+} from "~/ui/select";
+import {
+  Sheet,
+  SheetTitle,
+  SheetHeader,
+  SheetFooter,
+  SheetContent,
+  SheetTrigger,
+  SheetDescription,
+} from "~/ui/sheet";
 
 const KitPage: NextPage = () => {
   const router = useRouter();

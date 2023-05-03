@@ -48,9 +48,9 @@ import {
 import {
   Sheet,
   SheetTitle,
-  SheetContent,
   SheetFooter,
   SheetHeader,
+  SheetContent,
   SheetTrigger,
   SheetDescription,
 } from "~/ui/sheet";
@@ -118,7 +118,7 @@ const Collection: NextPage = () => {
       <Nav />
       <div className="flex flex-col md:flex-row">
         {/* Left Sidebar */}
-        <aside className="max-h-44 w-full overflow-y-auto border-b border-r px-4 py-8 md:max-h-[unset] md:w-1/4 md:border-b-0">
+        <aside className="max-h-44 w-full overflow-y-auto border-b border-r px-4 py-8 md:max-h-[unset] md:w-1/4 md:max-w-sm md:border-b-0">
           <h1 className="mb-4 text-2xl font-bold">Filters</h1>
 
           {/* Grades Filter */}
@@ -259,7 +259,7 @@ const Collection: NextPage = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="w-full px-4 py-7 md:w-3/4">
+        <main className="w-full px-4 py-7 md:w-3/4 md:flex-1">
           <div className="mb-4 flex items-center justify-between">
             <h1 className="inline text-2xl font-bold">Collection</h1>
 
