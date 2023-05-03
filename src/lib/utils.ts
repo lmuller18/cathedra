@@ -31,6 +31,7 @@ export const SERIES = [
   { code: "G Gundam", name: "G Gundam" },
   { code: "Age", name: "Gundam Age" },
   { code: "F91", name: "Gundam F91" },
+  { code: "Other", name: "Other" },
 ] as const;
 
 export function getSeriesByCode(code: string) {

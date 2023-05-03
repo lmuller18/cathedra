@@ -161,7 +161,7 @@ const EditKit = (props: EditKitProps) => {
   const { mutate: doDeleteKit, isLoading: isDeleting } =
     api.kit.deleteKit.useMutation({
       onSuccess() {
-        setOpen(false);
+        handleOpenChange(false);
         return utils.kit.getAll.invalidate();
       },
     });
@@ -196,7 +196,7 @@ const EditKit = (props: EditKitProps) => {
     },
   });
 
-  const { register, handleSubmit, control } = useForm<
+  const { register, handleSubmit, control, reset } = useForm<
     RouterInputs["kit"]["updateKit"]["kit"]
   >({
     defaultValues: {
@@ -226,8 +226,13 @@ const EditKit = (props: EditKitProps) => {
     doDeleteKit(props.kit.id);
   };
 
+  const handleOpenChange = (o: boolean) => {
+    if (!o) reset();
+    setOpen(o);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={(o) => setOpen(o)}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button>Edit Kit</Button>
       </SheetTrigger>

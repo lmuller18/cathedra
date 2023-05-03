@@ -348,12 +348,12 @@ const AddKit = () => {
   const utils = api.useContext();
   const { mutate } = api.kit.createKit.useMutation({
     onSuccess() {
-      setOpen(false);
+      handleOpenChange(false);
       return utils.kit.getAll.invalidate();
     },
   });
 
-  const { register, handleSubmit, control, formState } = useForm<
+  const { register, handleSubmit, control, formState, reset } = useForm<
     RouterInputs["kit"]["createKit"]
   >({
     resolver: zodResolver(CreateKitSchema),
@@ -367,8 +367,13 @@ const AddKit = () => {
     });
   };
 
+  const handleOpenChange = (o: boolean) => {
+    if (!o) reset();
+    setOpen(o);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={(o) => setOpen(o)}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button>Add Kit</Button>
       </SheetTrigger>
