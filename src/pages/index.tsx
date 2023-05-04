@@ -1,13 +1,17 @@
-import { type NextPage } from "next";
 import Head from "next/head";
-
+import { type NextPage } from "next";
 import { useEffect, useState } from "react";
-import GundamCard, { type Model } from "~/components/gundam-card";
+import { AnimatePresence, motion } from "framer-motion";
+
+import Nav from "~/components/nav";
+import CollectionCard from "~/components/collection-card";
+import { Button } from "~/components/ui/button";
+import Link from "next/link";
 
 const TestSection = () => {
   return (
-    <section className="bg-gray-100 py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-gray-100 py-12">
+      <div className="container">
         <div className="lg:text-center">
           <h2 className="text-base font-semibold uppercase tracking-wide text-indigo-600">
             Featured Models
@@ -28,7 +32,7 @@ const TestSection = () => {
               <div className="relative overflow-hidden rounded-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={models[2]?.image}
+                  src={kits[2]?.image}
                   alt="Gundam Model"
                   className="h-56 w-full object-cover object-center"
                 />
@@ -49,7 +53,7 @@ const TestSection = () => {
               <div className="relative overflow-hidden rounded-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={models[0]?.image}
+                  src={kits[0]?.image}
                   alt="Gundam Model"
                   className="h-56 w-full object-cover object-center"
                 />
@@ -70,7 +74,7 @@ const TestSection = () => {
               <div className="relative overflow-hidden rounded-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={models[1]?.image}
+                  src={kits[1]?.image}
                   alt="Gundam Model"
                   className="h-56 w-full object-cover object-center"
                 />
@@ -98,7 +102,7 @@ const HeroSection = () => {
     const interval = setInterval(
       () =>
         setActiveIndex((activeIndex) =>
-          activeIndex + 1 >= models.length ? 0 : activeIndex + 1
+          activeIndex + 1 >= kits.length ? 0 : activeIndex + 1
         ),
       5000
     );
@@ -106,32 +110,66 @@ const HeroSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const selectedModel = models[activeIndex % models.length];
+  const selectedModel = kits[activeIndex % kits.length];
 
   return (
-    <section>
-      <div className="container relative mx-auto px-6 py-16">
+    <section className="w-full py-16">
+      <div className="container relative">
         <div className="lg:flex lg:justify-between">
           <div className="lg:w-1/2">
-            <h1 className="mb-8 text-5xl font-bold leading-tight text-white lg:text-7xl">
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-8 text-5xl font-bold leading-tight text-white lg:text-7xl"
+            >
               Track your Gundam Models with ease.
-            </h1>
-            <p className="mb-8 text-xl text-gray-400 lg:text-2xl">
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-8 text-xl text-gray-400 lg:text-2xl"
+            >
               Say goodbye to forgetting which models you&apos;e purchased and
               which ones you&apos;ve built. With our tracking app, you can keep
               track of your collection with ease.
-            </p>
-            <button className="focus:shadow-outline transform rounded-full bg-red-500 px-8 py-4 font-bold text-white shadow-lg transition duration-300 ease-in-out hover:scale-105 hover:bg-red-700 focus:outline-none">
-              Get started
-            </button>
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Link href="/collection">
+                <Button> Get Started</Button>
+              </Link>
+            </motion.div>
           </div>
           <div className="relative lg:w-1/2">
             <div className="ml-auto h-[520px] max-w-[350px]">
-              {selectedModel && (
-                <div key={selectedModel.name}>
-                  <GundamCard model={selectedModel} />
-                </div>
-              )}
+              <AnimatePresence>
+                {selectedModel && (
+                  <motion.div
+                    key={selectedModel.id}
+                    initial={{ x: 100, opacity: 0, position: "absolute" }}
+                    animate={{
+                      x: 0,
+                      opacity: 1,
+                      position: "static",
+                      transition: { duration: 0.6 },
+                    }}
+                    exit={{
+                      x: -100,
+                      opacity: 0,
+                      position: "absolute",
+                      transition: { duration: 0.3 },
+                    }}
+                    className="w-[350px]"
+                  >
+                    <CollectionCard kit={selectedModel} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -142,22 +180,38 @@ const HeroSection = () => {
 
 const AboutSection = () => {
   return (
-    <section className="bg-gray-50 py-16">
-      <div className="container mx-auto px-4">
+    <section className="w-full bg-muted py-16">
+      <div className="container">
         <div className="flex flex-col lg:flex-row lg:justify-between">
           <div className="lg:w-1/2 lg:pr-10">
-            <h2 className="mb-4 text-4xl font-bold text-gray-800">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-4 text-4xl font-bold text-primary"
+            >
               Keep Track of Your Gundam Model Collection
-            </h2>
-            <p className="mb-8 text-lg leading-relaxed text-gray-600">
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mb-8 text-lg leading-relaxed"
+            >
               Our Gundam model tracking website is the perfect tool for any
               Gundam model builder looking to organize their collection. With
               our simple and intuitive interface, you can keep track of which
               models you own, which ones you&apos;ve built, and much more.
-            </p>
-            <button className="rounded-lg bg-red-600 px-6 py-3 text-white hover:bg-red-700 focus:outline-none">
-              Get Started
-            </button>
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <Link href="/collection">
+                <Button> Get Started</Button>
+              </Link>
+            </motion.div>
           </div>
           <div className="mt-12 lg:mt-0 lg:w-1/2">
             <CollectionDemo />
@@ -168,53 +222,96 @@ const AboutSection = () => {
   );
 };
 
-export const models = [
+const kits = [
   {
-    name: "RX-78-2 Gundam",
-    status: "owned",
-    image:
-      "https://cdn.shopify.com/s/files/1/0727/8355/products/27d7884d-c254-401f-86be-23d2a83779fc_800x.jpg?v=1650457530",
-    series: "Mobile Suit Gundam",
-    releaseDate: "2013",
-    scale: "1/110",
-    grade: "MG",
-    accessories: ["Beam Saber", "Beam Rifle", "Shield"],
-    description:
-      "The RX-78-2 Gundam is a prototype mobile suit developed by the Earth Federation. It was the first mobile suit to be designed with beam weapons and was piloted by Amuro Ray during the One Year War.",
-  },
-  {
-    name: "MSZ-006 Zeta Gundam",
-    status: "not-owned",
-    image:
-      "https://bbts1.azureedge.net/images/p/full/2020/06/8f145ff2-2689-41ac-a393-01ed014cd5c2.jpg",
-    series: "Mobile Suit Zeta Gundam",
-    releaseDate: "2016",
-    scale: "1/144",
-    grade: "RG",
-    accessories: ["Beam Saber", "Beam Rifle", "Shield"],
-    description:
-      "The MSZ-006 Zeta Gundam is a transformable mobile suit developed by Anaheim Electronics. It was piloted by Kamille Bidan and is known for its advanced transformation capabilities.",
-  },
-  {
-    name: "RX-0 Unicorn Gundam",
-    status: "built",
-    image:
-      "https://cdn.shopify.com/s/files/1/0727/8355/products/9f9fe3f1-f9a8-4201-904c-30939796b9c1-removebg_800x.png?v=1620440309",
-    series: "Mobile Suit Gundam Unicorn",
-    releaseDate: "2018",
-    scale: "1/144",
+    id: "1",
+    userId: "1",
+    name: "HG Gundam Aerial",
+    image: "/images/hg_gundam_aerial.jpeg",
     grade: "HG",
-    accessories: ["Beam Saber", "Shield"],
-    description:
-      "The RX-0 Unicorn Gundam is a transformable mobile suit developed by Anaheim Electronics. It was piloted by Banagher Links and is known for its advanced transformation capabilities and powerful weapons.",
+    scale: "1/144",
+    series: "G-Witch",
+    status: "ASSEMBLED",
+    link: null,
+    releaseDate: null,
+    orderedDate: null,
+    backlogOrder: null,
+    createdAt: new Date("1/1/23"),
+    updatedAt: new Date("1/1/23"),
   },
-] satisfies [Model, Model, Model];
+  {
+    id: "2",
+    userId: "1",
+    name: "MG Sazabi Ver. Ka",
+    image: "/images/mg_sazabi_verka.jpeg",
+    grade: "MG",
+    scale: "1/100",
+    series: "UC",
+    status: "OWNED",
+    link: null,
+    releaseDate: null,
+    orderedDate: null,
+    backlogOrder: null,
+    createdAt: new Date("1/1/23"),
+    updatedAt: new Date("1/1/23"),
+  },
+  {
+    id: "3",
+    userId: "1",
+    name: "PG Unicorm Gundam",
+    image: "/images/pg_unicorn_gundam.jpeg",
+    grade: "PG",
+    scale: "1/60",
+    series: "UC",
+    status: "WISHLIST",
+    link: null,
+    releaseDate: null,
+    orderedDate: null,
+    backlogOrder: null,
+    createdAt: new Date("1/1/23"),
+    updatedAt: new Date("1/1/23"),
+  },
+] as const;
 
 const CollectionDemo = () => {
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-      <GundamCard model={models[0]} />
-      <GundamCard model={models[1]} />
+      <CollectionCard
+        kit={{
+          id: "3",
+          userId: "1",
+          name: "RG ZGMF-X20A Strike Freedom Gundam",
+          image: "/images/rg_strike_freedom_gundam.jpeg",
+          grade: "RG",
+          scale: "1/144",
+          series: "SEED",
+          status: "ORDERED",
+          link: null,
+          releaseDate: null,
+          orderedDate: null,
+          backlogOrder: null,
+          createdAt: new Date("1/1/23"),
+          updatedAt: new Date("1/1/23"),
+        }}
+      />
+      <CollectionCard
+        kit={{
+          id: "3",
+          userId: "1",
+          name: "HG Sinanju Stein [Narrative Ver.]",
+          image: "/images/hg_sinanju_stein.png",
+          grade: "HF",
+          scale: "1/144",
+          series: "UC",
+          status: "ASSEMBLED",
+          link: null,
+          releaseDate: null,
+          orderedDate: null,
+          backlogOrder: null,
+          createdAt: new Date("1/1/23"),
+          updatedAt: new Date("1/1/23"),
+        }}
+      />
     </div>
   );
 };
@@ -223,16 +320,18 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Create T3 App</title>
-        <meta name="description" content="Generated by create-t3-app" />
+        <title>Cathedra | Gundam Tracker</title>
+        <meta
+          name="description"
+          content="Gundam collection and backlog tracker"
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center ">
+      <Nav />
+      <main className="flex min-h-screen flex-col items-center justify-center">
         <HeroSection />
 
         <AboutSection />
-
-        {/* <GundamForm /> */}
 
         <TestSection />
       </main>

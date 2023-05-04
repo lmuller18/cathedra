@@ -1,34 +1,33 @@
+import { useState } from "react";
+
 import Head from "next/head";
 import Link from "next/link";
-import Image from "next/image";
-import { useState } from "react";
 import { type NextPage } from "next";
-import { type Kit } from "@prisma/client";
+
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusSquare, MinusSquare } from "lucide-react";
 import { type CheckedState } from "@radix-ui/react-checkbox";
+import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
+import { getServerAuthSession } from "~/server/auth";
 import { type RouterInputs, api } from "~/utils/api";
 import { CreateKitSchema } from "~/lib/server-types";
 import { GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
 
 import Nav from "~/components/nav";
-import ProgressStepper from "~/components/progress-stepper";
+import CollectionCard from "~/components/collection-card";
 
 import { Input } from "~/ui/input";
-import { Badge } from "~/ui/badge";
 import { Label } from "~/ui/label";
 import { Button } from "~/ui/button";
 import { Checkbox } from "~/ui/checkbox";
 import { Separator } from "~/ui/separator";
-import { AspectRatio } from "~/ui/aspect-ratio";
 import {
   Card,
   CardTitle,
   CardFooter,
   CardHeader,
-  CardContent,
   CardDescription,
 } from "~/ui/card";
 import {
@@ -282,50 +281,14 @@ const Collection: NextPage = () => {
             )}
 
             {kits?.map((kit) => (
-              <CollectionCard key={kit.id} kit={kit} />
+              <Link key={kit.id} href={`/collection/${kit.id}`}>
+                <CollectionCard key={kit.id} kit={kit} />
+              </Link>
             ))}
           </div>
         </main>
       </div>
     </>
-  );
-};
-
-interface CollectionCardProps {
-  kit: Kit;
-}
-
-const CollectionCard = (props: CollectionCardProps) => {
-  return (
-    <Link href={`/collection/${props.kit.id}`}>
-      <Card className="flex cursor-pointer flex-col overflow-hidden">
-        <AspectRatio ratio={4 / 3} className="bg-muted-foreground">
-          <Image
-            fill
-            src={props.kit.image ?? "/images/gundam-placeholder.png"}
-            className="object-cover"
-            alt={props.kit.name}
-          />
-        </AspectRatio>
-        <CardHeader>
-          <CardTitle className="line-clamp-1">{props.kit.name}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge>
-              {props.kit.grade} {props.kit.scale}
-            </Badge>
-            <Separator orientation="vertical" className="h-4" />
-            <Badge variant="outline" className="whitespace-nowrap">
-              {props.kit.series}
-            </Badge>
-          </div>
-        </CardContent>
-        <div className="mt-1 flex flex-grow flex-col justify-end p-4 pt-0">
-          <ProgressStepper status={props.kit.status} />
-        </div>
-      </Card>
-    </Link>
   );
 };
 
@@ -377,7 +340,7 @@ const AddKit = () => {
       <SheetTrigger asChild>
         <Button>Add Kit</Button>
       </SheetTrigger>
-      <SheetContent position="right" className="w-full sm:w-1/2 lg:w-1/3">
+      <SheetContent position="right" className="w-full sm:w-[420px]">
         <SheetHeader>
           <SheetTitle>Add kit</SheetTitle>
           <SheetDescription>
@@ -568,6 +531,25 @@ const AddKit = () => {
       </SheetContent>
     </Sheet>
   );
+};
+
+export const getServerSideProps = async ({
+  req,
+  res,
+}: CreateNextContextOptions) => {
+  const session = await getServerAuthSession({ req, res });
+
+  if (!session?.user) {
+    const callbackUrl = req.cookies?.["next-auth.callback-url"] ?? "";
+    const params = req.headers.host
+      ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : "";
+    return {
+      redirect: { destination: `/api/auth/signin${params}` },
+    };
+  }
+
+  return { props: { session } };
 };
 
 export default Collection;

@@ -1,6 +1,7 @@
 import {
   User,
   Home,
+  Twitch,
   LogOut,
   Settings,
   CreditCard,
@@ -100,7 +101,13 @@ const UserMenu = () => {
       </Avatar>
     );
 
-  if (!session) return <Button onClick={() => void signIn()}>Sign In</Button>;
+  if (!session)
+    return (
+      <Button onClick={() => void signIn("twitch")} variant="twitch">
+        <Twitch className="mr-2 h-4 w-4" />
+        Login with Twitch
+      </Button>
+    );
 
   return (
     <DropdownMenu>

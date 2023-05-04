@@ -1,7 +1,9 @@
 import { type NextPage } from "next";
+import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
-import Nav from "~/components/nav";
 import { api } from "~/utils/api";
+import Nav from "~/components/nav";
+import { getServerAuthSession } from "~/server/auth";
 
 const BacklogPage: NextPage = () => {
   const { data: backlog } = api.kit.getBacklog.useQuery();
@@ -28,6 +30,25 @@ const BacklogPage: NextPage = () => {
       </div>
     </div>
   );
+};
+
+export const getServerSideProps = async ({
+  req,
+  res,
+}: CreateNextContextOptions) => {
+  const session = await getServerAuthSession({ req, res });
+
+  if (!session?.user) {
+    const callbackUrl = req.cookies?.["next-auth.callback-url"] ?? "";
+    const params = req.headers.host
+      ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : "";
+    return {
+      redirect: { destination: `/api/auth/signin${params}` },
+    };
+  }
+
+  return { props: { session } };
 };
 
 export default BacklogPage;

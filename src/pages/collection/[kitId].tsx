@@ -47,6 +47,8 @@ import {
   SheetTrigger,
   SheetDescription,
 } from "~/ui/sheet";
+import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
+import { getServerAuthSession } from "~/server/auth";
 
 const KitPage: NextPage = () => {
   const router = useRouter();
@@ -240,7 +242,7 @@ const EditKit = (props: EditKitProps) => {
       <SheetTrigger asChild>
         <Button>Edit Kit</Button>
       </SheetTrigger>
-      <SheetContent position="right" className="w-full sm:w-1/2 lg:w-1/3">
+      <SheetContent position="right" className="w-full sm:w-[420px]">
         <SheetHeader>
           <SheetTitle>Edit Kit Details</SheetTitle>
           <SheetDescription>
@@ -403,6 +405,25 @@ const EditKit = (props: EditKitProps) => {
       </SheetContent>
     </Sheet>
   );
+};
+
+export const getServerSideProps = async ({
+  req,
+  res,
+}: CreateNextContextOptions) => {
+  const session = await getServerAuthSession({ req, res });
+
+  if (!session?.user) {
+    const callbackUrl = req.cookies?.["next-auth.callback-url"] ?? "";
+    const params = req.headers.host
+      ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : "";
+    return {
+      redirect: { destination: `/api/auth/signin${params}` },
+    };
+  }
+
+  return { props: { session } };
 };
 
 export default KitPage;
