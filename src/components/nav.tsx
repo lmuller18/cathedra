@@ -1,29 +1,20 @@
-import {
-  User,
-  Home,
-  Twitch,
-  LogOut,
-  Settings,
-  CreditCard,
-  PlusCircle,
-} from "lucide-react";
-import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Home, Twitch, LogOut } from "lucide-react";
+import { signIn, signOut, useSession } from "next-auth/react";
+
+import { cn } from "~/lib/utils";
+import NavLink from "~/components/ui/nav-link";
 import { Button } from "~/components/ui/button";
+import { Skeleton } from "~/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
 } from "~/components/ui/dropdown-menu";
-import NavLink from "~/components/ui/nav-link";
-import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/lib/utils";
 
 const Nav = () => (
   <div className="border-b">
@@ -133,7 +124,7 @@ const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
+        {/* <DropdownMenuGroup>
           <DropdownMenuItem>
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
@@ -154,7 +145,7 @@ const UserMenu = () => {
             <span>New Team</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator /> */}
         <DropdownMenuItem onClick={() => void signOut()}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>

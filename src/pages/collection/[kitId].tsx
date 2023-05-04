@@ -49,6 +49,12 @@ import {
 } from "~/ui/sheet";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { getServerAuthSession } from "~/server/auth";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
 const KitPage: NextPage = () => {
   const router = useRouter();
@@ -57,10 +63,10 @@ const KitPage: NextPage = () => {
   const { data: kit, isLoading } = api.kit.getById.useQuery(kitId, {
     enabled: !!kitId,
   });
-  const { data: relatedKits } = api.kit.getAll.useQuery({
-    page: 0,
-    pageSize: 5,
-  });
+  const { data: relatedKits, isLoading: isLoadingRelated } =
+    api.kit.getRelated.useQuery(kitId, {
+      enabled: !!kitId,
+    });
 
   if (isLoading) return <div>...loading</div>;
   if (!kit) return <div>kit not found</div>;
@@ -114,6 +120,18 @@ const KitPage: NextPage = () => {
           <h2 className="mb-4 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
             Related Kits
           </h2>
+
+          {!isLoadingRelated && (!relatedKits || relatedKits.length === 0) && (
+            <Card className="w-[160px] sm:w-[250px]">
+              <CardHeader>
+                <CardTitle>No Related Kits Found</CardTitle>
+                <CardDescription>
+                  No kits were found with similar grades or series.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
           <div className="relative">
             <ScrollArea>
               <div className="flex space-x-4 pb-4">
@@ -163,12 +181,14 @@ interface EditKitProps {
 const EditKit = (props: EditKitProps) => {
   const utils = api.useContext();
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const { mutate: doDeleteKit, isLoading: isDeleting } =
     api.kit.deleteKit.useMutation({
       onSuccess() {
         handleOpenChange(false);
-        return utils.kit.getAll.invalidate();
+        void utils.kit.getAll.invalidate();
+        void router.push("/collection");
       },
     });
   const { mutate, isLoading: isSubmitting } = api.kit.updateKit.useMutation({

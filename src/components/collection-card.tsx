@@ -13,12 +13,12 @@ interface CollectionCardProps {
 
 const CollectionCard = (props: CollectionCardProps) => {
   return (
-    <Card className="flex cursor-pointer flex-col overflow-hidden">
+    <Card className="flex flex-col overflow-hidden">
       <AspectRatio ratio={4 / 3} className="bg-muted-foreground">
         <Image
           fill
           src={props.kit.image ?? "/images/gundam-placeholder.png"}
-          className="object-cover"
+          className="object-cover transition-all hover:scale-105"
           alt={props.kit.name}
         />
       </AspectRatio>

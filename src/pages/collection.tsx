@@ -23,6 +23,7 @@ import { Label } from "~/ui/label";
 import { Button } from "~/ui/button";
 import { Checkbox } from "~/ui/checkbox";
 import { Separator } from "~/ui/separator";
+import { ScrollArea } from "~/ui/scroll-area";
 import {
   Card,
   CardTitle,
@@ -117,144 +118,161 @@ const Collection: NextPage = () => {
       <Nav />
       <div className="flex flex-col md:flex-row">
         {/* Left Sidebar */}
-        <aside className="max-h-44 w-full overflow-y-auto border-b border-r px-4 py-8 md:max-h-[unset] md:w-1/4 md:max-w-sm md:border-b-0">
+        <aside className="w-full border-b border-r px-4 py-8 md:w-1/4 md:max-w-sm md:border-b-0">
           <h1 className="mb-4 text-2xl font-bold">Filters</h1>
+          <Separator className="mt-4 block md:hidden" />
 
-          {/* Grades Filter */}
-          <section>
-            <Collapsible
-              open={filtersExpanded.grades}
-              onOpenChange={(value) => updateFiltersExpanded("grades", value)}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-lg font-bold">Grades</h3>
+          <ScrollArea className="h-44 md:h-full">
+            {/* Grades Filter */}
+            <section className="pt-4 md:pt-0">
+              <Collapsible
+                open={filtersExpanded.grades}
+                onOpenChange={(value) => updateFiltersExpanded("grades", value)}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Grades</h3>
 
-                <FilterExpansionToggle expanded={filtersExpanded.grades} />
-              </div>
-              <CollapsibleContent>
-                <ul>
-                  {GRADES.map(({ code, label }) => (
-                    <li className="mb-2 flex items-center space-x-2" key={code}>
-                      <Checkbox
-                        id={`grade-${code}`}
-                        className="mr-2"
-                        value={code}
-                        onCheckedChange={(checked) =>
-                          updateFilters("grades", code, checked)
-                        }
-                      />
+                  <FilterExpansionToggle expanded={filtersExpanded.grades} />
+                </div>
+                <CollapsibleContent>
+                  <ul>
+                    {GRADES.map(({ code, label }) => (
+                      <li
+                        className="mb-2 flex items-center space-x-2"
+                        key={code}
+                      >
+                        <Checkbox
+                          id={`grade-${code}`}
+                          className="mr-2"
+                          value={code}
+                          onCheckedChange={(checked) =>
+                            updateFilters("grades", code, checked)
+                          }
+                        />
 
-                      <Label htmlFor={`grade-${code}`}>
-                        {code} - {label}
-                      </Label>
-                    </li>
-                  ))}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </section>
+                        <Label htmlFor={`grade-${code}`}>
+                          {code} - {label}
+                        </Label>
+                      </li>
+                    ))}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </section>
 
-          <Separator className="my-4" />
+            <Separator className="my-4" />
 
-          {/* Scales Filter */}
-          <section>
-            <Collapsible
-              open={filtersExpanded.scales}
-              onOpenChange={(value) => updateFiltersExpanded("scales", value)}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-lg font-bold">Scales</h3>
+            {/* Scales Filter */}
+            <section>
+              <Collapsible
+                open={filtersExpanded.scales}
+                onOpenChange={(value) => updateFiltersExpanded("scales", value)}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Scales</h3>
 
-                <FilterExpansionToggle expanded={filtersExpanded.scales} />
-              </div>
-              <CollapsibleContent>
-                <ul>
-                  {SCALES.map(({ code, label }) => (
-                    <li className="mb-2 flex items-center space-x-2" key={code}>
-                      <Checkbox
-                        id={`scale-${code}`}
-                        className="mr-2"
-                        value={code}
-                        onCheckedChange={(checked) =>
-                          updateFilters("scales", code, checked)
-                        }
-                      />
+                  <FilterExpansionToggle expanded={filtersExpanded.scales} />
+                </div>
+                <CollapsibleContent>
+                  <ul>
+                    {SCALES.map(({ code, label }) => (
+                      <li
+                        className="mb-2 flex items-center space-x-2"
+                        key={code}
+                      >
+                        <Checkbox
+                          id={`scale-${code}`}
+                          className="mr-2"
+                          value={code}
+                          onCheckedChange={(checked) =>
+                            updateFilters("scales", code, checked)
+                          }
+                        />
 
-                      <Label htmlFor={`scale-${code}`}>{label}</Label>
-                    </li>
-                  ))}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </section>
+                        <Label htmlFor={`scale-${code}`}>{label}</Label>
+                      </li>
+                    ))}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </section>
 
-          <Separator className="my-4" />
+            <Separator className="my-4" />
 
-          {/* Series Filter */}
-          <section>
-            <Collapsible
-              open={filtersExpanded.series}
-              onOpenChange={(value) => updateFiltersExpanded("series", value)}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-lg font-bold">Series</h3>
+            {/* Series Filter */}
+            <section>
+              <Collapsible
+                open={filtersExpanded.series}
+                onOpenChange={(value) => updateFiltersExpanded("series", value)}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Series</h3>
 
-                <FilterExpansionToggle expanded={filtersExpanded.series} />
-              </div>
-              <CollapsibleContent>
-                <ul>
-                  {SERIES.map(({ code, name }) => (
-                    <li className="mb-2 flex items-center space-x-2" key={code}>
-                      <Checkbox
-                        id={`series-${code}`}
-                        className="mr-2"
-                        value={code}
-                        onCheckedChange={(checked) =>
-                          updateFilters("series", code, checked)
-                        }
-                      />
+                  <FilterExpansionToggle expanded={filtersExpanded.series} />
+                </div>
+                <CollapsibleContent>
+                  <ul>
+                    {SERIES.map(({ code, name }) => (
+                      <li
+                        className="mb-2 flex items-center space-x-2"
+                        key={code}
+                      >
+                        <Checkbox
+                          id={`series-${code}`}
+                          className="mr-2"
+                          value={code}
+                          onCheckedChange={(checked) =>
+                            updateFilters("series", code, checked)
+                          }
+                        />
 
-                      <Label htmlFor={`series-${code}`}>{name}</Label>
-                    </li>
-                  ))}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </section>
+                        <Label htmlFor={`series-${code}`}>{name}</Label>
+                      </li>
+                    ))}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </section>
 
-          <Separator className="my-4" />
+            <Separator className="my-4" />
 
-          {/* Status Filter */}
-          <section>
-            <Collapsible
-              open={filtersExpanded.statuses}
-              onOpenChange={(value) => updateFiltersExpanded("statuses", value)}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-lg font-bold">Statuses</h3>
+            {/* Status Filter */}
+            <section>
+              <Collapsible
+                open={filtersExpanded.statuses}
+                onOpenChange={(value) =>
+                  updateFiltersExpanded("statuses", value)
+                }
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Statuses</h3>
 
-                <FilterExpansionToggle expanded={filtersExpanded.statuses} />
-              </div>
-              <CollapsibleContent>
-                <ul>
-                  {STATUSES.map(({ code, label }) => (
-                    <li className="mb-2 flex items-center space-x-2" key={code}>
-                      <Checkbox
-                        id={`status-${code}`}
-                        className="mr-2"
-                        value={code}
-                        onCheckedChange={(checked) =>
-                          updateFilters("statuses", code, checked)
-                        }
-                      />
+                  <FilterExpansionToggle expanded={filtersExpanded.statuses} />
+                </div>
+                <CollapsibleContent>
+                  <ul>
+                    {STATUSES.map(({ code, label }) => (
+                      <li
+                        className="mb-2 flex items-center space-x-2"
+                        key={code}
+                      >
+                        <Checkbox
+                          id={`status-${code}`}
+                          className="mr-2"
+                          value={code}
+                          onCheckedChange={(checked) =>
+                            updateFilters("statuses", code, checked)
+                          }
+                        />
 
-                      <Label htmlFor={`status-${code}`}>{label}</Label>
-                    </li>
-                  ))}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </section>
+                        <Label htmlFor={`status-${code}`}>{label}</Label>
+                      </li>
+                    ))}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </section>
+          </ScrollArea>
         </aside>
 
         {/* Main Content */}

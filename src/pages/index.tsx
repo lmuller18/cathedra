@@ -146,7 +146,7 @@ const HeroSection = () => {
             </motion.div>
           </div>
           <div className="relative lg:w-1/2">
-            <div className="ml-auto h-[520px] max-w-[350px]">
+            <div className="ml-auto h-[419px] w-[350px]">
               <AnimatePresence>
                 {selectedModel && (
                   <motion.div
@@ -164,7 +164,6 @@ const HeroSection = () => {
                       position: "absolute",
                       transition: { duration: 0.3 },
                     }}
-                    className="w-[350px]"
                   >
                     <CollectionCard kit={selectedModel} />
                   </motion.div>

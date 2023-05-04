@@ -1,3 +1,4 @@
+import { type Kit } from "@prisma/client";
 import { z } from "zod";
 import { CreateKitSchema, UpdateKitSchema } from "~/lib/server-types";
 import {
@@ -5,6 +6,17 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
+
+const getRelatedPriority = (
+  kit: { series: string; grade: string },
+  relatedKit: Kit
+) => {
+  if (kit.series === relatedKit.series && kit.grade === relatedKit.grade)
+    return 3;
+  if (kit.series === relatedKit.series) return 2;
+  if (kit.grade === relatedKit.grade) return 1;
+  return 0;
+};
 
 export const kitRouter = createTRPCRouter({
   getAll: protectedProcedure
@@ -105,6 +117,30 @@ export const kitRouter = createTRPCRouter({
       orderBy: { backlogOrder: "asc" },
     });
   }),
+  getRelated: protectedProcedure
+    .input(z.string())
+    .query(async ({ ctx, input }) => {
+      const kit = await ctx.prisma.kit.findFirst({
+        where: { id: input, userId: ctx.session.user.id },
+        select: { grade: true, series: true },
+      });
+
+      if (!kit) return [];
+
+      const relatedDbKits = await ctx.prisma.kit.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          id: { not: input },
+          OR: [{ grade: kit.grade }, { series: kit.series }],
+        },
+      });
+
+      return relatedDbKits.sort((a, b) => {
+        const aPriority = getRelatedPriority(kit, a);
+        const bPriority = getRelatedPriority(kit, b);
+        return bPriority - aPriority;
+      });
+    }),
   deleteKit: protectedProcedure.input(z.string()).mutation(({ ctx, input }) => {
     return ctx.prisma.kit.deleteMany({
       where: { id: input, userId: ctx.session.user.id },
