@@ -21,16 +21,6 @@ const getBaseUrl = () => {
 export const api = createTRPCNext<AppRouter>({
   config() {
     return {
-      queryClientConfig: {
-        defaultOptions: {
-          mutations: {
-            networkMode: "always",
-          },
-          queries: {
-            networkMode: "always",
-          },
-        },
-      },
       /**
        * Transformer used for data de-serialization from the server.
        *

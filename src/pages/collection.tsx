@@ -23,8 +23,10 @@ import { Input } from "~/ui/input";
 import { Label } from "~/ui/label";
 import { Button } from "~/ui/button";
 import { Checkbox } from "~/ui/checkbox";
+import { Skeleton } from "~/ui/skeleton";
 import { Separator } from "~/ui/separator";
 import { ScrollArea } from "~/ui/scroll-area";
+import { AspectRatio } from "~/ui/aspect-ratio";
 import {
   Card,
   CardTitle,
@@ -341,11 +343,22 @@ const Collection: NextPage = () => {
               </Card>
             )}
 
-            {kitData?.kits.map((kit) => (
-              <Link key={kit.id} href={`/collection/${kit.id}`}>
-                <CollectionCard key={kit.id} kit={kit} />
-              </Link>
-            ))}
+            {isLoadingKits
+              ? Array.from(Array(8)).map((_, i) => (
+                  <Card key={i}>
+                    <AspectRatio ratio={4 / 3}>
+                      <Skeleton className="h-full w-full" />
+                    </AspectRatio>
+                    <CardHeader className="p-6 pb-3 xl:p-3">
+                      <Skeleton className="h-4 w-full" />
+                    </CardHeader>
+                  </Card>
+                ))
+              : kitData?.kits.map((kit) => (
+                  <Link key={kit.id} href={`/collection/${kit.id}`}>
+                    <CollectionCard key={kit.id} kit={kit} />
+                  </Link>
+                ))}
           </div>
           <div className="flex items-center justify-end space-x-2 py-4">
             <Button
