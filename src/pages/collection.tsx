@@ -4,14 +4,15 @@ import Head from "next/head";
 import Link from "next/link";
 import { type NextPage } from "next";
 
-import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusSquare, MinusSquare } from "lucide-react";
 import { type CheckedState } from "@radix-ui/react-checkbox";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
-import { getServerAuthSession } from "~/server/auth";
+import { Controller, useForm } from "react-hook-form";
+import { PlusSquare, MinusSquare } from "lucide-react";
+
 import { type RouterInputs, api } from "~/utils/api";
+import { getServerAuthSession } from "~/server/auth";
 import { CreateKitSchema } from "~/lib/server-types";
 import { GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
 
@@ -56,16 +57,19 @@ import {
 } from "~/ui/sheet";
 
 const Collection: NextPage = () => {
+  const [page, setPage] = useState(0);
+
   const [filters, setFilters] = useState<RouterInputs["kit"]["getAll"]>({
     grades: [],
     scales: [],
     series: [],
     statuses: [],
   });
-  const { data: kits, isLoading: isLoadingKits } = api.kit.getAll.useQuery(
-    filters,
-    { keepPreviousData: true }
-  );
+  const { data: kitData, isLoading: isLoadingKits } =
+    api.kit.getPaginated.useQuery(
+      { ...filters, page, pageSize: 8 },
+      { keepPreviousData: true }
+    );
 
   const updateFilters = (
     property: "grades" | "scales" | "series" | "statuses",
@@ -283,7 +287,7 @@ const Collection: NextPage = () => {
             <AddKit />
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {!isLoadingKits && (!kits || kits.length === 0) && (
+            {!isLoadingKits && (!kitData || kitData.kits.length === 0) && (
               <Card>
                 <CardHeader>
                   <CardTitle>No Kits Found</CardTitle>
@@ -298,11 +302,29 @@ const Collection: NextPage = () => {
               </Card>
             )}
 
-            {kits?.map((kit) => (
+            {kitData?.kits.map((kit) => (
               <Link key={kit.id} href={`/collection/${kit.id}`}>
                 <CollectionCard key={kit.id} kit={kit} />
               </Link>
             ))}
+          </div>
+          <div className="flex items-center justify-end space-x-2 py-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p - 1)}
+              disabled={!kitData || kitData.page === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!kitData || page + 1 >= kitData.totalPages}
+            >
+              Next
+            </Button>
           </div>
         </main>
       </div>
@@ -330,7 +352,7 @@ const AddKit = () => {
   const { mutate } = api.kit.createKit.useMutation({
     onSuccess() {
       handleOpenChange(false);
-      return utils.kit.getAll.invalidate();
+      return utils.kit.invalidate();
     },
   });
 
@@ -558,12 +580,9 @@ export const getServerSideProps = async ({
   const session = await getServerAuthSession({ req, res });
 
   if (!session?.user) {
-    const callbackUrl = req.cookies?.["next-auth.callback-url"] ?? "";
-    const params = req.headers.host
-      ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
-      : "";
+    const params = `?callbackUrl=${encodeURIComponent("/collection")}`;
     return {
-      redirect: { destination: `/api/auth/signin${params}` },
+      redirect: { destination: `/auth/signin${params}` },
     };
   }
 

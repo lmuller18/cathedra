@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { type NextPage } from "next";
@@ -6,6 +7,7 @@ import { useRouter } from "next/router";
 import { type Kit } from "@prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import { UpdateKitKitSchema } from "~/lib/server-types";
 
@@ -13,6 +15,7 @@ import Nav from "~/components/nav";
 import ProgressStepper from "~/components/progress-stepper";
 
 import { type RouterInputs, api } from "~/utils/api";
+import { getServerAuthSession } from "~/server/auth";
 import {
   GRADES,
   SCALES,
@@ -47,13 +50,11 @@ import {
   SheetTrigger,
   SheetDescription,
 } from "~/ui/sheet";
-import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
-import { getServerAuthSession } from "~/server/auth";
 import {
   Card,
-  CardDescription,
-  CardHeader,
   CardTitle,
+  CardHeader,
+  CardDescription,
 } from "~/components/ui/card";
 
 const KitPage: NextPage = () => {
@@ -140,19 +141,23 @@ const KitPage: NextPage = () => {
                     className="w-[160px] space-y-3 sm:w-[250px]"
                     key={kit.id}
                   >
-                    <div className="overflow-hidden rounded-md">
-                      <Image
-                        src={kit.image ?? "/images/gundam-placeholder.png"}
-                        alt={kit.name}
-                        width={250}
-                        height={330}
-                        className="aspect-square h-auto w-auto bg-muted-foreground object-cover transition-all hover:scale-105"
-                      />
-                    </div>
+                    <Link href={`/collection/${kit.id}`}>
+                      <div className="overflow-hidden rounded-md">
+                        <Image
+                          src={kit.image ?? "/images/gundam-placeholder.png"}
+                          alt={kit.name}
+                          width={250}
+                          height={330}
+                          className="aspect-square h-auto w-auto bg-muted-foreground object-cover transition-all hover:scale-105"
+                        />
+                      </div>
+                    </Link>
                     <div className="space-y-1 text-sm">
-                      <h3 className="line-clamp-1 font-medium leading-none">
-                        {kit.name}
-                      </h3>
+                      <Link href={`/collection/${kit.id}`}>
+                        <h3 className="line-clamp-1 font-medium leading-none">
+                          {kit.name}
+                        </h3>
+                      </Link>
                       <div className="flex gap-2">
                         <Badge>
                           {kit.grade} {kit.scale}
@@ -187,38 +192,14 @@ const EditKit = (props: EditKitProps) => {
     api.kit.deleteKit.useMutation({
       onSuccess() {
         handleOpenChange(false);
-        void utils.kit.getAll.invalidate();
+        void utils.kit.invalidate();
         void router.push("/collection");
       },
     });
   const { mutate, isLoading: isSubmitting } = api.kit.updateKit.useMutation({
-    async onMutate(updatedKit) {
-      // Cancel outgoing fetches (so they don't overwrite our optimistic update)
-      await utils.kit.getAll.cancel();
-
-      // Get the data from the queryCache
-      const prevData = utils.kit.getAll.getData();
-
-      // Optimistically update the data with our new post
-      utils.kit.getAll.setData(undefined, (old) =>
-        old?.map((k) =>
-          k.id === updatedKit.id ? { ...k, ...updatedKit.kit } : k
-        )
-      );
-
-      // Return the previous data so we can revert if something goes wrong
-      return { prevData };
-    },
-    onError(err, newPost, ctx) {
-      if (ctx) {
-        // If the mutation fails, use the context-value from onMutate
-        utils.kit.getAll.setData(undefined, ctx.prevData);
-      }
-    },
     onSuccess() {
       setOpen(false);
-      void utils.kit.getAll.invalidate();
-      return utils.kit.getById.invalidate();
+      void utils.kit.invalidate();
     },
   });
 
@@ -434,12 +415,9 @@ export const getServerSideProps = async ({
   const session = await getServerAuthSession({ req, res });
 
   if (!session?.user) {
-    const callbackUrl = req.cookies?.["next-auth.callback-url"] ?? "";
-    const params = req.headers.host
-      ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
-      : "";
+    const params = `?callbackUrl=${encodeURIComponent("/collection")}`;
     return {
-      redirect: { destination: `/api/auth/signin${params}` },
+      redirect: { destination: `/auth/signin${params}` },
     };
   }
 

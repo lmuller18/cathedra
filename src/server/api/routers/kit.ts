@@ -19,6 +19,57 @@ const getRelatedPriority = (
 };
 
 export const kitRouter = createTRPCRouter({
+  getPaginated: protectedProcedure
+    .input(
+      z.object({
+        grades: z.string().array().optional(),
+        scales: z.string().array().optional(),
+        series: z.string().array().optional(),
+        statuses: z.string().array().optional(),
+        includeBacklog: z.boolean().optional(),
+        page: z.number().optional(),
+        pageSize: z.number().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // default page size IF pagination is requested
+      const DEFAULT_PAGE_SIZE = 10;
+
+      let pageInput = {};
+      const pageSize = input.pageSize ?? DEFAULT_PAGE_SIZE;
+      const page = input.page ?? 0;
+      pageInput = {
+        take: pageSize,
+        skip: pageSize * page,
+      };
+
+      const where = {
+        userId: ctx.session.user.id,
+        grade: input.grades?.length ? { in: input.grades } : undefined,
+        scale: input.scales?.length ? { in: input.scales } : undefined,
+        series: input.series?.length ? { in: input.series } : undefined,
+        status: input.statuses?.length ? { in: input.statuses } : undefined,
+        backlogOrder:
+          input.includeBacklog != null || input.includeBacklog
+            ? undefined
+            : { equals: null },
+      };
+
+      const [kits, count] = await ctx.prisma.$transaction([
+        ctx.prisma.kit.findMany({
+          where,
+          ...pageInput,
+        }),
+        ctx.prisma.kit.count({ where }),
+      ]);
+      return {
+        kits,
+        page,
+        pageSize,
+        totalElements: count,
+        totalPages: Math.ceil(count / pageSize),
+      };
+    }),
   getAll: protectedProcedure
     .input(
       z
@@ -27,26 +78,11 @@ export const kitRouter = createTRPCRouter({
           scales: z.string().array().optional(),
           series: z.string().array().optional(),
           statuses: z.string().array().optional(),
-          page: z.number().optional(),
-          pageSize: z.number().optional(),
           includeBacklog: z.boolean().optional(),
         })
         .optional()
     )
     .query(({ ctx, input }) => {
-      // default page size IF pagination is requested
-      const DEFAULT_PAGE_SIZE = 10;
-
-      let pageInput = {};
-      if (input?.page != null || input?.pageSize != null) {
-        const pageSize = input.pageSize ?? DEFAULT_PAGE_SIZE;
-        const page = input.page ?? 0;
-        pageInput = {
-          take: pageSize,
-          skip: pageSize * page,
-        };
-      }
-
       return ctx.prisma.kit.findMany({
         where: input
           ? {
@@ -63,7 +99,6 @@ export const kitRouter = createTRPCRouter({
                   : { equals: null },
             }
           : { userId: ctx.session.user.id },
-        ...pageInput,
       });
     }),
   getFilterOptions: publicProcedure.query(async ({ ctx }) => {
