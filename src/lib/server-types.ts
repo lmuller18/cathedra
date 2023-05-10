@@ -15,6 +15,9 @@ export const UpdateKitKitSchema = z.object({
   series: z
     .string({ required_error: "Series is required" })
     .min(1, { message: "Series is required" }),
+  type: z
+    .string({ required_error: "Type is required" })
+    .min(1, { message: "Type is required" }),
 });
 
 export const UpdateKitSchema = z.object({
@@ -37,4 +40,7 @@ export const CreateKitSchema = z.object({
   series: z
     .string({ required_error: "Series is required" })
     .min(1, { message: "Series is required" }),
+  type: z
+    .string({ required_error: "Type is required" })
+    .min(1, { message: "Type is required" }),
 });

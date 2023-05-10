@@ -28,6 +28,7 @@ model Kit {
     scale        String
     series       String
     link         String?
+    type         String    @default("MODEL")
     backlogOrder Int?
     // status === ordered
     orderedDate  DateTime?

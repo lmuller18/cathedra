@@ -60,3 +60,13 @@ export const STATUSES = [
 export function getStatusByCode(code: string) {
   return STATUSES.find((s) => s.code === code);
 }
+
+export const TYPES = [
+  { code: "MODEL", label: "Model" },
+  { code: "EXPANSION", label: "Expansion Kit" },
+  { code: "ACCESSORY", label: "Accessory" },
+];
+
+export function getTypeByCode(code: string) {
+  return TYPES.find((t) => t.code === code);
+}

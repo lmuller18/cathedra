@@ -6,6 +6,7 @@ import { Separator } from "./ui/separator";
 import { AspectRatio } from "./ui/aspect-ratio";
 import ProgressStepper from "./progress-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { getTypeByCode } from "~/lib/utils";
 
 interface CollectionCardProps {
   kit: Kit;
@@ -22,14 +23,18 @@ const CollectionCard = (props: CollectionCardProps) => {
           alt={props.kit.name}
         />
       </AspectRatio>
-      <CardHeader>
+      <CardHeader className="p-6 pb-3 xl:p-3">
         <CardTitle className="line-clamp-1">{props.kit.name}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6 pt-0 xl:p-3 xl:pt-0">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge>
-            {props.kit.grade} {props.kit.scale}
-          </Badge>
+          {props.kit.type === "MODEL" ? (
+            <Badge>
+              {props.kit.grade} {props.kit.scale}
+            </Badge>
+          ) : (
+            <Badge>{getTypeByCode(props.kit.type)?.label}</Badge>
+          )}
           <Separator orientation="vertical" className="h-4" />
           <Badge variant="outline" className="whitespace-nowrap">
             {props.kit.series}

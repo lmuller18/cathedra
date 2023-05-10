@@ -10,6 +10,7 @@ const BacklogPage: NextPage = () => {
   const { data: nonBacklog } = api.kit.getAll.useQuery({
     statuses: ["OWNED"],
     includeBacklog: false,
+    types: ["MODEL"],
   });
 
   return (

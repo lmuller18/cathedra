@@ -21,8 +21,10 @@ import {
   SCALES,
   SERIES,
   STATUSES,
+  TYPES,
   getSeriesByCode,
   getStatusByCode,
+  getTypeByCode,
 } from "~/lib/utils";
 
 import { Label } from "~/ui/label";
@@ -106,6 +108,14 @@ const KitPage: NextPage = () => {
                 <Badge size="lg" variant="outline">
                   {getSeriesByCode(kit.series)?.name}
                 </Badge>
+                {kit.type !== "MODEL" && (
+                  <>
+                    <Separator orientation="vertical" className="h-4" />
+                    <Badge size="lg" variant="outline">
+                      {getTypeByCode(kit.type)?.label}
+                    </Badge>
+                  </>
+                )}
               </div>
             </div>
 
@@ -213,6 +223,7 @@ const EditKit = (props: EditKitProps) => {
       scale: props.kit.scale,
       series: props.kit.series,
       status: props.kit.status,
+      type: props.kit.type,
     },
     resolver: zodResolver(UpdateKitKitSchema),
   });
@@ -348,6 +359,32 @@ const EditKit = (props: EditKitProps) => {
                         {SCALES.map((scale) => (
                           <SelectItem key={scale.code} value={scale.code}>
                             {scale.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">
+                Type
+              </Label>
+              <Controller
+                control={control}
+                name="type"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="type" placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Type</SelectLabel>
+                        {TYPES.map((type) => (
+                          <SelectItem key={type.code} value={type.code}>
+                            {type.label}
                           </SelectItem>
                         ))}
                       </SelectGroup>

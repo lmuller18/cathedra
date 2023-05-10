@@ -26,6 +26,7 @@ export const kitRouter = createTRPCRouter({
         scales: z.string().array().optional(),
         series: z.string().array().optional(),
         statuses: z.string().array().optional(),
+        types: z.string().array().optional(),
         includeBacklog: z.boolean().optional(),
         page: z.number().optional(),
         pageSize: z.number().optional(),
@@ -49,6 +50,7 @@ export const kitRouter = createTRPCRouter({
         scale: input.scales?.length ? { in: input.scales } : undefined,
         series: input.series?.length ? { in: input.series } : undefined,
         status: input.statuses?.length ? { in: input.statuses } : undefined,
+        type: input.types?.length ? { in: input.types } : undefined,
         backlogOrder:
           input.includeBacklog != null || input.includeBacklog
             ? undefined
@@ -78,6 +80,7 @@ export const kitRouter = createTRPCRouter({
           scales: z.string().array().optional(),
           series: z.string().array().optional(),
           statuses: z.string().array().optional(),
+          types: z.string().array().optional(),
           includeBacklog: z.boolean().optional(),
         })
         .optional()
@@ -93,6 +96,7 @@ export const kitRouter = createTRPCRouter({
               status: input.statuses?.length
                 ? { in: input.statuses }
                 : undefined,
+              type: input.types?.length ? { in: input.types } : undefined,
               backlogOrder:
                 input.includeBacklog != null || input.includeBacklog
                   ? undefined
@@ -157,7 +161,7 @@ export const kitRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const kit = await ctx.prisma.kit.findFirst({
         where: { id: input, userId: ctx.session.user.id },
-        select: { grade: true, series: true },
+        select: { grade: true, series: true, type: true },
       });
 
       if (!kit) return [];
@@ -166,6 +170,7 @@ export const kitRouter = createTRPCRouter({
         where: {
           userId: ctx.session.user.id,
           id: { not: input },
+          type: kit.type,
           OR: [{ grade: kit.grade }, { series: kit.series }],
         },
       });

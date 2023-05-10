@@ -14,7 +14,7 @@ import { PlusSquare, MinusSquare } from "lucide-react";
 import { type RouterInputs, api } from "~/utils/api";
 import { getServerAuthSession } from "~/server/auth";
 import { CreateKitSchema } from "~/lib/server-types";
-import { GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
+import { GRADES, SCALES, SERIES, STATUSES, TYPES } from "~/lib/utils";
 
 import Nav from "~/components/nav";
 import CollectionCard from "~/components/collection-card";
@@ -64,6 +64,7 @@ const Collection: NextPage = () => {
     scales: [],
     series: [],
     statuses: [],
+    types: [],
   });
   const { data: kitData, isLoading: isLoadingKits } =
     api.kit.getPaginated.useQuery(
@@ -72,7 +73,7 @@ const Collection: NextPage = () => {
     );
 
   const updateFilters = (
-    property: "grades" | "scales" | "series" | "statuses",
+    property: "grades" | "scales" | "series" | "statuses" | "types",
     value: string,
     checked: CheckedState
   ) => {
@@ -87,6 +88,7 @@ const Collection: NextPage = () => {
         [property]: f?.[property]?.filter((g) => g !== value) ?? [],
       }));
     }
+    setPage(0);
   };
 
   const [filtersExpanded, setFiltersExpanded] = useState<{
@@ -94,11 +96,13 @@ const Collection: NextPage = () => {
     scales: boolean;
     series: boolean;
     statuses: boolean;
+    types: boolean;
   }>({
     grades: true,
     scales: true,
     series: true,
     statuses: true,
+    types: true,
   });
 
   const updateFiltersExpanded = (
@@ -276,6 +280,41 @@ const Collection: NextPage = () => {
                 </CollapsibleContent>
               </Collapsible>
             </section>
+
+            {/* Types Filter */}
+            <section>
+              <Collapsible
+                open={filtersExpanded.types}
+                onOpenChange={(value) => updateFiltersExpanded("types", value)}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Types</h3>
+
+                  <FilterExpansionToggle expanded={filtersExpanded.types} />
+                </div>
+                <CollapsibleContent>
+                  <ul>
+                    {TYPES.map(({ code, label }) => (
+                      <li
+                        className="mb-2 flex items-center space-x-2"
+                        key={code}
+                      >
+                        <Checkbox
+                          id={`type-${code}`}
+                          className="mr-2"
+                          value={code}
+                          onCheckedChange={(checked) =>
+                            updateFilters("types", code, checked)
+                          }
+                        />
+
+                        <Label htmlFor={`type-${code}`}>{label}</Label>
+                      </li>
+                    ))}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </section>
           </ScrollArea>
         </aside>
 
@@ -360,6 +399,9 @@ const AddKit = () => {
     RouterInputs["kit"]["createKit"]
   >({
     resolver: zodResolver(CreateKitSchema),
+    defaultValues: {
+      type: "MODEL",
+    },
   });
 
   const onSubmit = (data: RouterInputs["kit"]["updateKit"]["kit"]) => {
@@ -526,6 +568,39 @@ const AddKit = () => {
               <div className="-mt-2 grid grid-cols-4 items-center gap-4">
                 <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
                   {formState.errors.scale.message}
+                </span>
+              </div>
+            )}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">
+                Type
+              </Label>
+              <Controller
+                control={control}
+                name="type"
+                render={({ field: { ref: _ref, onChange, ...rest } }) => (
+                  <Select onValueChange={onChange} {...rest}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue id="type" placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Types</SelectLabel>
+                        {TYPES.map((type) => (
+                          <SelectItem key={type.code} value={type.code}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            {formState.errors.type && (
+              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
+                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
+                  {formState.errors.type.message}
                 </span>
               </div>
             )}
