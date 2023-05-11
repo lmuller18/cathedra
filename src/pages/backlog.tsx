@@ -60,46 +60,44 @@ const BacklogPage: NextPage = () => {
             <h3 className="mb-2 mt-8 scroll-m-20 text-2xl font-semibold tracking-tight">
               Other
             </h3>
-            <div className="relative">
-              <ScrollArea>
-                <div className="flex space-x-4 pb-4">
-                  {nonBacklog?.map((kit) => (
-                    <div
-                      className="w-[150px] space-y-3 sm:w-[250px]"
-                      key={kit.id}
-                    >
+            <ScrollArea orientation="horizontal">
+              <div className="flex space-x-4 pb-4">
+                {nonBacklog?.map((kit) => (
+                  <div
+                    className="w-[150px] space-y-3 sm:w-[250px]"
+                    key={kit.id}
+                  >
+                    <Link href={`/collection/${kit.id}`}>
+                      <div className="overflow-hidden rounded-md">
+                        <Image
+                          src={kit.image ?? "/images/gundam-placeholder.png"}
+                          alt={kit.name}
+                          width={250}
+                          height={250}
+                          className="aspect-square h-auto w-auto bg-muted-foreground object-cover transition-all hover:scale-105"
+                        />
+                      </div>
+                    </Link>
+                    <div className="space-y-2 text-sm">
                       <Link href={`/collection/${kit.id}`}>
-                        <div className="overflow-hidden rounded-md">
-                          <Image
-                            src={kit.image ?? "/images/gundam-placeholder.png"}
-                            alt={kit.name}
-                            width={250}
-                            height={250}
-                            className="aspect-square h-auto w-auto bg-muted-foreground object-cover transition-all hover:scale-105"
-                          />
-                        </div>
+                        <h3 className="line-clamp-1 font-medium leading-none">
+                          {kit.name}
+                        </h3>
                       </Link>
-                      <div className="space-y-2 text-sm">
-                        <Link href={`/collection/${kit.id}`}>
-                          <h3 className="line-clamp-1 font-medium leading-none">
-                            {kit.name}
-                          </h3>
-                        </Link>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="secondary"
-                            onClick={() => addToBacklog(kit.id)}
-                            disabled={addingToBacklog}
-                          >
-                            Add to backlog
-                          </Button>
-                        </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="secondary"
+                          onClick={() => addToBacklog(kit.id)}
+                          disabled={addingToBacklog}
+                        >
+                          Add to backlog
+                        </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </>
         )}
       </div>
@@ -160,58 +158,59 @@ const Backlog = (props: BacklogProps) => {
       <h3 className="mb-2 mt-8 scroll-m-20 text-2xl font-semibold tracking-tight">
         Backlog
       </h3>
-      <div className="relative flex gap-4 overflow-scroll">
-        <div className="flex-1">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Series</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {props.kits.map((kit) => (
-                <TableRow
-                  key={kit.id}
-                  onMouseEnter={() => setSelectedId(kit.id)}
-                  data-state={kit.id === selected?.id ? "selected" : ""}
-                >
-                  <TableCell className="font-medium">
-                    <Button
-                      asChild
-                      variant="link"
-                      className="whitespace-nowrap"
-                    >
-                      <Link href={`/collection/${kit.id}`}>{kit.name}</Link>
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Badge>
-                      {kit.grade} {kit.scale}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{kit.series}</Badge>
-                  </TableCell>
-                  <TableCell className="w-full"></TableCell>
+      <ScrollArea orientation="horizontal">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Series</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {props.kits.map((kit) => (
+                  <TableRow
+                    key={kit.id}
+                    onMouseEnter={() => setSelectedId(kit.id)}
+                    data-state={kit.id === selected?.id ? "selected" : ""}
+                  >
+                    <TableCell className="font-medium">
+                      <Button
+                        asChild
+                        variant="link"
+                        className="whitespace-nowrap"
+                      >
+                        <Link href={`/collection/${kit.id}`}>{kit.name}</Link>
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Badge>
+                        {kit.grade} {kit.scale}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{kit.series}</Badge>
+                    </TableCell>
+                    <TableCell className="w-full"></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div>
+            {selected && (
+              <BacklogCard
+                kit={selected}
+                backlogCount={props.kits.length}
+                reorder={reorder}
+              />
+            )}
+          </div>
         </div>
-
-        <div className="sticky top-0">
-          {selected && (
-            <BacklogCard
-              kit={selected}
-              backlogCount={props.kits.length}
-              reorder={reorder}
-            />
-          )}
-        </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };
