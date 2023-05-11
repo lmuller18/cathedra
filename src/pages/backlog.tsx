@@ -161,40 +161,46 @@ const Backlog = (props: BacklogProps) => {
         Backlog
       </h3>
       <div className="relative flex gap-4 overflow-scroll">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Grade</TableHead>
-              <TableHead>Series</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {props.kits.map((kit) => (
-              <TableRow
-                key={kit.id}
-                onMouseEnter={() => setSelectedId(kit.id)}
-                data-state={kit.id === selected?.id ? "selected" : ""}
-              >
-                <TableCell className="font-medium">
-                  <Button asChild variant="link" className="whitespace-nowrap">
-                    <Link href={`/collection/${kit.id}`}>{kit.name}</Link>
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Badge>
-                    {kit.grade} {kit.scale}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{kit.series}</Badge>
-                </TableCell>
-                <TableCell className="w-full"></TableCell>
+        <div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Grade</TableHead>
+                <TableHead>Series</TableHead>
+                <TableHead />
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {props.kits.map((kit) => (
+                <TableRow
+                  key={kit.id}
+                  onMouseEnter={() => setSelectedId(kit.id)}
+                  data-state={kit.id === selected?.id ? "selected" : ""}
+                >
+                  <TableCell className="font-medium">
+                    <Button
+                      asChild
+                      variant="link"
+                      className="whitespace-nowrap"
+                    >
+                      <Link href={`/collection/${kit.id}`}>{kit.name}</Link>
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Badge>
+                      {kit.grade} {kit.scale}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{kit.series}</Badge>
+                  </TableCell>
+                  <TableCell className="w-full"></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
         <div className="sticky top-0">
           {selected && (
