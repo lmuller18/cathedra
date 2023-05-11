@@ -161,7 +161,7 @@ const Backlog = (props: BacklogProps) => {
         Backlog
       </h3>
       <div className="relative flex gap-4 overflow-scroll">
-        <div>
+        <div className="flex-1">
           <Table>
             <TableHeader>
               <TableRow>
