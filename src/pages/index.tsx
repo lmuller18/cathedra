@@ -140,9 +140,9 @@ const HeroSection = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <Link href="/collection">
-                <Button> Get Started</Button>
-              </Link>
+              <Button asChild>
+                <Link href="/collection">Get Started </Link>
+              </Button>
             </motion.div>
           </div>
           <div className="relative lg:w-1/2">
@@ -207,9 +207,9 @@ const AboutSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
             >
-              <Link href="/collection">
-                <Button> Get Started</Button>
-              </Link>
+              <Button asChild>
+                <Link href="/collection">Get Started</Link>
+              </Button>
             </motion.div>
           </div>
           <div className="mt-12 lg:mt-0 lg:w-1/2">

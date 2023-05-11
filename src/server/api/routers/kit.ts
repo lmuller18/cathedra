@@ -98,12 +98,24 @@ export const kitRouter = createTRPCRouter({
                 : undefined,
               type: input.types?.length ? { in: input.types } : undefined,
               backlogOrder:
-                input.includeBacklog != null || input.includeBacklog
-                  ? undefined
-                  : { equals: null },
+                input.includeBacklog === false ? { equals: null } : undefined,
             }
           : { userId: ctx.session.user.id },
       });
+    }),
+  updateBacklogOrder: protectedProcedure
+    .input(
+      z.object({ id: z.string(), backlogOrder: z.number() }).array().min(1)
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.$transaction(
+        input.map((kit) =>
+          ctx.prisma.kit.updateMany({
+            where: { id: kit.id, userId: ctx.session.user.id },
+            data: { backlogOrder: kit.backlogOrder },
+          })
+        )
+      );
     }),
   getFilterOptions: publicProcedure.query(async ({ ctx }) => {
     const [grades, scales, series, statuses] = await Promise.all([
@@ -149,13 +161,30 @@ export const kitRouter = createTRPCRouter({
   getBacklog: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.kit.findMany({
       where: {
-        status: "OWNED",
+        type: "MODEL",
         backlogOrder: { not: null },
         userId: ctx.session.user.id,
       },
       orderBy: { backlogOrder: "asc" },
     });
   }),
+  addToBacklog: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      const count = await ctx.prisma.kit.count({
+        where: { backlogOrder: { not: null }, userId: ctx.session.user.id },
+      });
+
+      return ctx.prisma.kit.updateMany({
+        where: { id: input, userId: ctx.session.user.id },
+        data: {
+          backlogOrder: count,
+        },
+      });
+    }),
+  // removeFromBacklog: protectedProcedure
+  //   .input(z.string())
+  //   .mutation(async ({ ctx, input }) => {}),
   getRelated: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {

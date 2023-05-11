@@ -70,6 +70,14 @@ const KitPage: NextPage = () => {
     api.kit.getRelated.useQuery(kitId, {
       enabled: !!kitId,
     });
+  const utils = api.useContext();
+
+  const { mutate: addToBacklog, isLoading: addingToBacklog } =
+    api.kit.addToBacklog.useMutation({
+      onSuccess() {
+        return utils.kit.invalidate();
+      },
+    });
 
   if (isLoading) return <div>...loading</div>;
   if (!kit) return <div>kit not found</div>;
@@ -123,7 +131,22 @@ const KitPage: NextPage = () => {
               <ProgressStepper status={kit.status} size="lg" />
             </div>
 
-            <EditKit kit={kit} />
+            <div className="flex items-center gap-2">
+              <EditKit kit={kit} />
+
+              {kit.status === "OWNED" ? (
+                kit.backlogOrder == null ? (
+                  <Button
+                    onClick={() => addToBacklog(kit.id)}
+                    disabled={addingToBacklog}
+                  >
+                    Add to backlog
+                  </Button>
+                ) : (
+                  <Button variant="outline">Remove from backlog</Button>
+                )
+              ) : null}
+            </div>
           </div>
         </div>
 
