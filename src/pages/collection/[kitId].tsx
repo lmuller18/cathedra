@@ -79,6 +79,13 @@ const KitPage: NextPage = () => {
       },
     });
 
+  const { mutate: removeFromBacklog, isLoading: removingFromBacklog } =
+    api.kit.removeFromBacklog.useMutation({
+      onSuccess() {
+        return utils.kit.invalidate();
+      },
+    });
+
   if (isLoading) return <div>...loading</div>;
   if (!kit) return <div>kit not found</div>;
   return (
@@ -143,7 +150,13 @@ const KitPage: NextPage = () => {
                     Add to backlog
                   </Button>
                 ) : (
-                  <Button variant="outline">Remove from backlog</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => removeFromBacklog(kit.id)}
+                    disabled={removingFromBacklog}
+                  >
+                    Remove from backlog
+                  </Button>
                 )
               ) : null}
             </div>

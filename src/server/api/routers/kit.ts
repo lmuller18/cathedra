@@ -1,4 +1,4 @@
-import { type Kit } from "@prisma/client";
+import { type Kit, type PrismaClient, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { CreateKitSchema, UpdateKitSchema } from "~/lib/server-types";
 import {
@@ -6,6 +6,12 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
+
+type PrismaContext = PrismaClient<
+  Prisma.PrismaClientOptions,
+  never,
+  Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
+>;
 
 const getRelatedPriority = (
   kit: { series: string; grade: string },
@@ -16,6 +22,54 @@ const getRelatedPriority = (
   if (kit.series === relatedKit.series) return 2;
   if (kit.grade === relatedKit.grade) return 1;
   return 0;
+};
+
+const removeFromBacklog = async (
+  id: string,
+  userId: string,
+  prisma: PrismaContext
+) => {
+  const kit = await prisma.kit.findFirst({
+    where: { id, userId },
+  });
+
+  if (!kit) return null;
+
+  const updatedKit = await prisma.kit.update({
+    where: { id: kit.id },
+    data: { backlogOrder: null },
+  });
+
+  const backlog = await prisma.kit.findMany({
+    where: {
+      type: "MODEL",
+      backlogOrder: { not: null },
+      userId,
+    },
+    orderBy: { backlogOrder: "asc" },
+  });
+
+  await prisma.$transaction(
+    backlog.map((kit, index) =>
+      prisma.kit.update({
+        where: { id: kit.id },
+        data: { backlogOrder: index },
+      })
+    )
+  );
+
+  return updatedKit;
+};
+
+const getBacklog = async (userId: string, prisma: PrismaContext) => {
+  return prisma.kit.findMany({
+    where: {
+      type: "MODEL",
+      backlogOrder: { not: null },
+      userId,
+    },
+    orderBy: { backlogOrder: "asc" },
+  });
 };
 
 export const kitRouter = createTRPCRouter({
@@ -149,24 +203,26 @@ export const kitRouter = createTRPCRouter({
     }),
   updateKit: protectedProcedure
     .input(UpdateKitSchema)
-    .mutation(({ ctx, input }) => {
-      return ctx.prisma.kit.update({
+    .mutation(async ({ ctx, input }) => {
+      const updatedKit = await ctx.prisma.kit.update({
         where: { id: input.id },
         data: {
           ...input.kit,
           userId: ctx.session.user.id,
         },
       });
+
+      if (
+        updatedKit.backlogOrder !== null &&
+        updatedKit.status === "ASSEMBLED"
+      ) {
+        await removeFromBacklog(updatedKit.id, ctx.session.user.id, ctx.prisma);
+      }
+
+      return updatedKit;
     }),
   getBacklog: protectedProcedure.query(({ ctx }) => {
-    return ctx.prisma.kit.findMany({
-      where: {
-        type: "MODEL",
-        backlogOrder: { not: null },
-        userId: ctx.session.user.id,
-      },
-      orderBy: { backlogOrder: "asc" },
-    });
+    return getBacklog(ctx.session.user.id, ctx.prisma);
   }),
   addToBacklog: protectedProcedure
     .input(z.string())
@@ -182,9 +238,11 @@ export const kitRouter = createTRPCRouter({
         },
       });
     }),
-  // removeFromBacklog: protectedProcedure
-  //   .input(z.string())
-  //   .mutation(async ({ ctx, input }) => {}),
+  removeFromBacklog: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      return removeFromBacklog(input, ctx.session.user.id, ctx.prisma);
+    }),
   getRelated: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
