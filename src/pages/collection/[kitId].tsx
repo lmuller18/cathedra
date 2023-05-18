@@ -67,6 +67,7 @@ import Nav from "~/components/nav";
 import { Badge } from "~/ui/badge";
 import { Input } from "~/ui/input";
 import { Button } from "~/ui/button";
+import { useToast } from "~/ui/use-toast";
 import { AspectRatio } from "~/ui/aspect-ratio";
 import type { RouterInputs } from "~/utils/api";
 import { getServerAuthSession } from "~/server/auth";
@@ -97,7 +98,7 @@ const KitPage: NextPage = () => {
       <Nav />
 
       <div className="sm:pt-8">
-        <KitDetails kit={kit}></KitDetails>
+        <KitDetails kit={kit} />
 
         <div className="container mt-6">
           <h2 className="mb-4 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
@@ -166,6 +167,7 @@ interface KitDetailsProps {
 }
 
 const KitDetails = (props: KitDetailsProps) => {
+  const { toast } = useToast();
   const utils = api.useContext();
   const [editing, setEditing] = useState(false);
 
@@ -184,6 +186,7 @@ const KitDetails = (props: KitDetailsProps) => {
   const { mutate, isLoading: isSubmitting } = api.kit.updateKit.useMutation({
     onSuccess() {
       setEditing(false);
+      toast({ title: "Kit updated" });
       void utils.kit.invalidate();
     },
   });
@@ -280,6 +283,7 @@ interface EditKitImageProps {
 }
 
 const EditKitImage = (props: EditKitImageProps) => {
+  const { toast } = useToast();
   const utils = api.useContext();
   const [editingImage, setEditingImage] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -331,6 +335,7 @@ const EditKitImage = (props: EditKitImageProps) => {
       },
       {
         onSuccess() {
+          toast({ title: "Kit image updated" });
           setEditingImage(false);
           props.setEditing(false);
           return utils.kit.invalidate();
@@ -584,11 +589,15 @@ interface KitActionsProps {
 
 const KitActions = (props: KitActionsProps) => {
   const router = useRouter();
+  const { toast } = useToast();
   const utils = api.useContext();
 
   const { mutate: addToBacklog, isLoading: addingToBacklog } =
     api.kit.addToBacklog.useMutation({
       onSuccess() {
+        toast({
+          title: "Kit added to backlog",
+        });
         return utils.kit.invalidate();
       },
     });
@@ -596,6 +605,9 @@ const KitActions = (props: KitActionsProps) => {
   const { mutate: removeFromBacklog, isLoading: removingFromBacklog } =
     api.kit.removeFromBacklog.useMutation({
       onSuccess() {
+        toast({
+          title: "Kit removed from backlog",
+        });
         return utils.kit.invalidate();
       },
     });
