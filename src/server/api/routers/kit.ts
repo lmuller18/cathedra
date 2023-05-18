@@ -1,11 +1,13 @@
-import { type Kit, type PrismaClient, type Prisma } from "@prisma/client";
 import { z } from "zod";
-import { CreateKitSchema, UpdateKitSchema } from "~/lib/server-types";
+
+import type { Kit, Prisma, PrismaClient } from "@prisma/client";
+
 import {
-  createTRPCRouter,
   publicProcedure,
+  createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { CreateKitSchema, UpdateKitSchema } from "~/lib/server-types";
 
 type PrismaContext = PrismaClient<
   Prisma.PrismaClientOptions,
@@ -201,15 +203,34 @@ export const kitRouter = createTRPCRouter({
         },
       });
     }),
+  updateKitImage: protectedProcedure
+    .input(z.object({ id: z.string(), imageUrl: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const kit = await ctx.prisma.kit.findUnique({
+        where: { id: input.id },
+        select: { userId: true },
+      });
+
+      if (!kit || kit.userId !== ctx.session.user.id) return;
+
+      return ctx.prisma.kit.update({
+        where: { id: input.id },
+        data: { image: input.imageUrl },
+      });
+    }),
   updateKit: protectedProcedure
     .input(UpdateKitSchema)
     .mutation(async ({ ctx, input }) => {
+      const kit = await ctx.prisma.kit.findUnique({
+        where: { id: input.id },
+        select: { userId: true },
+      });
+
+      if (!kit || kit.userId !== ctx.session.user.id) return;
+
       const updatedKit = await ctx.prisma.kit.update({
         where: { id: input.id },
-        data: {
-          ...input.kit,
-          userId: ctx.session.user.id,
-        },
+        data: input.kit,
       });
 
       if (

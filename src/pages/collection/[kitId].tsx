@@ -1,39 +1,51 @@
+import {
+  X,
+  Pen,
+  Trash,
+  Loader2,
+  PlusSquare,
+  MinusSquare,
+  MoreVertical,
+} from "lucide-react";
+import {
+  useForm,
+  Controller,
+  FormProvider,
+  useFormContext,
+} from "react-hook-form";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { type NextPage } from "next";
-import { Loader2 } from "lucide-react";
+import type { NextPage } from "next";
 import { useRouter } from "next/router";
-import { type Kit } from "@prisma/client";
+import type { FileWithPath } from "react-dropzone";
+import type { Dispatch, SetStateAction } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+import type { Kit } from "@prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
+import { generateReactHelpers } from "@uploadthing/react/hooks";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 
-import { UpdateKitKitSchema } from "~/lib/server-types";
-
-import Nav from "~/components/nav";
-import ProgressStepper from "~/components/progress-stepper";
-
-import { type RouterInputs, api } from "~/utils/api";
-import { getServerAuthSession } from "~/server/auth";
 import {
+  Table,
+  TableRow,
+  TableBody,
+  TableHead,
+  TableCell,
+  TableHeader,
+} from "~/ui/table";
+import {
+  TYPES,
   GRADES,
   SCALES,
   SERIES,
   STATUSES,
-  TYPES,
+  getTypeByCode,
+  getGradeByCode,
+  getScaleByCode,
   getSeriesByCode,
   getStatusByCode,
-  getTypeByCode,
 } from "~/lib/utils";
-
-import { Label } from "~/ui/label";
-import { Badge } from "~/ui/badge";
-import { Input } from "~/ui/input";
-import { Button } from "~/ui/button";
-import { Separator } from "~/ui/separator";
-import { AspectRatio } from "~/ui/aspect-ratio";
-import { ScrollArea, ScrollBar } from "~/ui/scroll-area";
 import {
   Select,
   SelectItem,
@@ -44,20 +56,27 @@ import {
   SelectTrigger,
 } from "~/ui/select";
 import {
-  Sheet,
-  SheetTitle,
-  SheetHeader,
-  SheetFooter,
-  SheetContent,
-  SheetTrigger,
-  SheetDescription,
-} from "~/ui/sheet";
-import {
-  Card,
-  CardTitle,
-  CardHeader,
-  CardDescription,
-} from "~/components/ui/card";
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "~/ui/dropdown-menu";
+import { api } from "~/utils/api";
+import Nav from "~/components/nav";
+import { Badge } from "~/ui/badge";
+import { Input } from "~/ui/input";
+import { Button } from "~/ui/button";
+import { AspectRatio } from "~/ui/aspect-ratio";
+import type { RouterInputs } from "~/utils/api";
+import { getServerAuthSession } from "~/server/auth";
+import { UpdateKitKitSchema } from "~/lib/server-types";
+import { ScrollBar, ScrollArea } from "~/ui/scroll-area";
+import type { UploadRouter } from "~/server/uploadthing";
+import UploadDropzone from "~/components/upload-dropzone";
+import { Card, CardTitle, CardHeader, CardDescription } from "~/ui/card";
+
+const { useUploadThing } = generateReactHelpers<UploadRouter>();
 
 const KitPage: NextPage = () => {
   const router = useRouter();
@@ -70,106 +89,23 @@ const KitPage: NextPage = () => {
     api.kit.getRelated.useQuery(kitId, {
       enabled: !!kitId,
     });
-  const utils = api.useContext();
-
-  const { mutate: addToBacklog, isLoading: addingToBacklog } =
-    api.kit.addToBacklog.useMutation({
-      onSuccess() {
-        return utils.kit.invalidate();
-      },
-    });
-
-  const { mutate: removeFromBacklog, isLoading: removingFromBacklog } =
-    api.kit.removeFromBacklog.useMutation({
-      onSuccess() {
-        return utils.kit.invalidate();
-      },
-    });
 
   if (isLoading) return <div>...loading</div>;
   if (!kit) return <div>kit not found</div>;
   return (
     <div>
       <Nav />
-      <div className="container pt-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-12">
-          {/* <!-- Kit Image --> */}
-          <div className="sm:col-span-5">
-            <AspectRatio
-              ratio={4 / 3}
-              className="overflow-hidden rounded-sm bg-muted-foreground"
-            >
-              <Image
-                fill
-                src={kit.image ?? "/images/gundam-placeholder.png"}
-                className="object-cover"
-                alt={kit.name}
-              />
-            </AspectRatio>
-          </div>
 
-          {/* <!-- Kit Details --> */}
-          <div className="sm:col-span-7">
-            <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-              {kit.name}
-            </h1>
+      <div className="sm:pt-8">
+        <KitDetails kit={kit}></KitDetails>
 
-            <div className="my-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge size="lg">
-                  {kit.grade} {kit.scale}
-                </Badge>
-                <Separator orientation="vertical" className="h-4" />
-                <Badge size="lg" variant="outline">
-                  {getSeriesByCode(kit.series)?.name}
-                </Badge>
-                {kit.type !== "MODEL" && (
-                  <>
-                    <Separator orientation="vertical" className="h-4" />
-                    <Badge size="lg" variant="outline">
-                      {getTypeByCode(kit.type)?.label}
-                    </Badge>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <ProgressStepper status={kit.status} size="lg" />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <EditKit kit={kit} />
-
-              {kit.status === "OWNED" ? (
-                kit.backlogOrder == null ? (
-                  <Button
-                    onClick={() => addToBacklog(kit.id)}
-                    disabled={addingToBacklog}
-                  >
-                    Add to backlog
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => removeFromBacklog(kit.id)}
-                    disabled={removingFromBacklog}
-                  >
-                    Remove from backlog
-                  </Button>
-                )
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6">
+        <div className="container mt-6">
           <h2 className="mb-4 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
             Related Kits
           </h2>
 
           {!isLoadingRelated && (!relatedKits || relatedKits.length === 0) && (
-            <Card className="w-[160px] sm:w-[250px]">
+            <Card className="max-w-[300px]">
               <CardHeader>
                 <CardTitle>No Related Kits Found</CardTitle>
                 <CardDescription>
@@ -225,36 +161,17 @@ const KitPage: NextPage = () => {
   );
 };
 
-interface EditKitProps {
+interface KitDetailsProps {
   kit: Kit;
 }
 
-const EditKit = (props: EditKitProps) => {
+const KitDetails = (props: KitDetailsProps) => {
   const utils = api.useContext();
-  const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const [editing, setEditing] = useState(false);
 
-  const { mutate: doDeleteKit, isLoading: isDeleting } =
-    api.kit.deleteKit.useMutation({
-      onSuccess() {
-        handleOpenChange(false);
-        void utils.kit.invalidate();
-        void router.push("/collection");
-      },
-    });
-  const { mutate, isLoading: isSubmitting } = api.kit.updateKit.useMutation({
-    onSuccess() {
-      setOpen(false);
-      void utils.kit.invalidate();
-    },
-  });
-
-  const { register, handleSubmit, control, reset } = useForm<
-    RouterInputs["kit"]["updateKit"]["kit"]
-  >({
+  const methods = useForm<RouterInputs["kit"]["updateKit"]["kit"]>({
     defaultValues: {
       grade: props.kit.grade,
-      image: props.kit.image,
       name: props.kit.name,
       scale: props.kit.scale,
       series: props.kit.series,
@@ -264,77 +181,258 @@ const EditKit = (props: EditKitProps) => {
     resolver: zodResolver(UpdateKitKitSchema),
   });
 
-  const onSubmit = (data: RouterInputs["kit"]["updateKit"]["kit"]) => {
-    const image = data.image;
+  const { mutate, isLoading: isSubmitting } = api.kit.updateKit.useMutation({
+    onSuccess() {
+      setEditing(false);
+      void utils.kit.invalidate();
+    },
+  });
 
+  const onSubmit = (data: RouterInputs["kit"]["updateKit"]["kit"]) => {
     mutate({
       id: props.kit.id,
-      kit: {
-        ...data,
-        image: image && image.length ? image : null,
-      },
+      kit: data,
     });
   };
 
-  const deleteKit = () => {
-    doDeleteKit(props.kit.id);
+  return (
+    <div className="grid grid-cols-1 gap-x-8 gap-y-2 sm:container sm:grid-cols-12">
+      <div className="sm:col-span-5">
+        {!editing ? (
+          <AspectRatio
+            ratio={4 / 3}
+            className="overflow-hidden rounded-sm bg-muted-foreground"
+          >
+            <Image
+              fill
+              src={props.kit.image ?? "/images/gundam-placeholder.png"}
+              className="object-cover"
+              alt={props.kit.name}
+            />
+          </AspectRatio>
+        ) : (
+          <EditKitImage
+            image={props.kit.image ?? "/images/gundam-placeholder.png"}
+            kitId={props.kit.id}
+            setEditing={setEditing}
+          />
+        )}
+      </div>
+      <FormProvider {...methods}>
+        <form
+          className="px-4 sm:col-span-7 sm:px-0"
+          onSubmit={(e) => {
+            if (editing) {
+              void methods.handleSubmit(onSubmit, (err) => console.error(err))(
+                e
+              );
+            }
+          }}
+        >
+          {!editing ? (
+            <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+              {props.kit.name}
+            </h1>
+          ) : (
+            <Input
+              id="name"
+              {...methods.register("name")}
+              placeholder="Kit name"
+              className="mt-4 sm:mt-0"
+            />
+          )}
+
+          <KitDetailsTable
+            kit={props.kit}
+            editing={editing}
+            setEditing={setEditing}
+          />
+
+          {editing && (
+            <div className="mt-2 flex flex-col-reverse flex-wrap gap-2 sm:flex-row sm:justify-end sm:px-4">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setEditing(false);
+                  methods.reset();
+                }}
+              >
+                Discard Changes
+              </Button>
+              <Button variant="default" type="submit" disabled={isSubmitting}>
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </form>
+      </FormProvider>
+    </div>
+  );
+};
+
+interface EditKitImageProps {
+  kitId: string;
+  image: string;
+  setEditing: Dispatch<SetStateAction<boolean>>;
+}
+
+const EditKitImage = (props: EditKitImageProps) => {
+  const utils = api.useContext();
+  const [editingImage, setEditingImage] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+
+  const { startUpload, permittedFileInfo, isUploading } = useUploadThing({
+    endpoint: "editKitImage",
+  });
+
+  const { mutate, isLoading } = api.kit.updateKitImage.useMutation();
+  const [preview, setPreview] = useState<string | null>(null);
+  const onDrop = useCallback(
+    (acceptedFiles: FileWithPath[]) => {
+      if (preview) URL.revokeObjectURL(preview);
+      setFiles(acceptedFiles);
+    },
+    [preview]
+  );
+
+  useEffect(() => {
+    if (files.length > 0 && files[0] != null) {
+      setPreview(URL.createObjectURL(files[0]));
+    } else {
+      setPreview(null);
+    }
+  }, [files]);
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  const submitImage = async () => {
+    const response = await startUpload(files);
+    if (!response) {
+      console.error("No image upload response");
+      return;
+    }
+    const image = response[0];
+    if (!image) {
+      console.error("No image in response");
+      return;
+    }
+
+    mutate(
+      {
+        id: props.kitId,
+        imageUrl: image.fileUrl,
+      },
+      {
+        onSuccess() {
+          setEditingImage(false);
+          props.setEditing(false);
+          return utils.kit.invalidate();
+        },
+      }
+    );
   };
 
-  const handleOpenChange = (o: boolean) => {
-    if (!o) reset();
-    setOpen(o);
-  };
+  if (!editingImage)
+    return (
+      <AspectRatio
+        ratio={4 / 3}
+        className="relative overflow-hidden rounded-sm bg-muted-foreground"
+      >
+        <Image
+          fill
+          src={props.image}
+          className="object-cover"
+          alt="Editable kit image"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70">
+          <Button onClick={() => setEditingImage(true)}>Change Image</Button>
+        </div>
+      </AspectRatio>
+    );
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
-        <Button>Edit Kit</Button>
-      </SheetTrigger>
-      <SheetContent position="right" className="w-full sm:w-[420px]">
-        <SheetHeader>
-          <SheetTitle>Edit Kit Details</SheetTitle>
-          <SheetDescription>
-            Adjust the details of one of your kits
-          </SheetDescription>
-        </SheetHeader>
-        <form
-          onSubmit={(e) =>
-            void handleSubmit(onSubmit, (err) => console.error(err))(e)
-          }
-        >
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                {...register("name")}
-                placeholder="Kit name"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Image
-              </Label>
-              <Input
-                id="image"
-                {...register("image")}
-                placeholder="Image link"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="grade" className="text-right">
-                Grade
-              </Label>
+    <div>
+      <div className="relative">
+        <AspectRatio ratio={4 / 3}>
+          {preview ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+              <img src={preview} className="h-full w-full object-cover" />
+
+              <button
+                type="button"
+                onClick={() => setFiles([])}
+                className="absolute right-1 top-1 rounded-full bg-black/25 p-1 transition-colors hover:bg-black/40 active:bg-black/40"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <UploadDropzone
+              onDrop={onDrop}
+              permittedFileInfo={permittedFileInfo}
+            />
+          )}
+        </AspectRatio>
+      </div>
+
+      {files[0] && (
+        <div className="mt-2 flex flex-col px-4 sm:flex-row sm:justify-end sm:px-0">
+          <Button
+            disabled={isUploading || isLoading}
+            onClick={() => void submitImage()}
+          >
+            Save Image
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface KitDetailsTableProps {
+  kit: Kit;
+  setEditing: Dispatch<SetStateAction<boolean>>;
+  editing: boolean;
+}
+
+const KitDetailsTable = (props: KitDetailsTableProps) => {
+  const { control } = useFormContext<RouterInputs["kit"]["updateKit"]["kit"]>();
+
+  return (
+    <Table className="mt-4">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="font-bold">Kit Info</TableHead>
+          <TableHead className="text-right">
+            <KitActions
+              kit={props.kit}
+              editing={props.editing}
+              setEditing={props.setEditing}
+            />
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell className="font-bold">Grade</TableCell>
+          {!props.editing ? (
+            <TableCell>{getGradeByCode(props.kit.grade)?.label}</TableCell>
+          ) : (
+            <TableCell>
               <Controller
                 control={control}
                 name="grade"
                 render={({ field: { ref: _ref, onChange, ...rest } }) => (
                   <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger>
                       <SelectValue id="grade" placeholder="Select a grade" />
                     </SelectTrigger>
                     <SelectContent>
@@ -350,17 +448,21 @@ const EditKit = (props: EditKitProps) => {
                   </Select>
                 )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="series" className="text-right">
-                Series
-              </Label>
+            </TableCell>
+          )}
+        </TableRow>
+        <TableRow>
+          <TableCell className="font-bold">Series</TableCell>
+          {!props.editing ? (
+            <TableCell>{getSeriesByCode(props.kit.series)?.name}</TableCell>
+          ) : (
+            <TableCell>
               <Controller
                 control={control}
                 name="series"
                 render={({ field: { ref: _ref, onChange, ...rest } }) => (
                   <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger>
                       <SelectValue id="series" placeholder="Select a series" />
                     </SelectTrigger>
                     <SelectContent>
@@ -376,17 +478,21 @@ const EditKit = (props: EditKitProps) => {
                   </Select>
                 )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="scale" className="text-right">
-                Scale
-              </Label>
+            </TableCell>
+          )}
+        </TableRow>
+        <TableRow>
+          <TableCell className="font-bold">Scale</TableCell>
+          {!props.editing ? (
+            <TableCell>{getScaleByCode(props.kit.scale)?.label}</TableCell>
+          ) : (
+            <TableCell>
               <Controller
                 control={control}
                 name="scale"
                 render={({ field: { ref: _ref, onChange, ...rest } }) => (
                   <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger>
                       <SelectValue id="scale" placeholder="Select a scale" />
                     </SelectTrigger>
                     <SelectContent>
@@ -402,17 +508,21 @@ const EditKit = (props: EditKitProps) => {
                   </Select>
                 )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
-                Type
-              </Label>
+            </TableCell>
+          )}
+        </TableRow>
+        <TableRow>
+          <TableCell className="font-bold">Type</TableCell>
+          {!props.editing ? (
+            <TableCell>{getTypeByCode(props.kit.type)?.label}</TableCell>
+          ) : (
+            <TableCell>
               <Controller
                 control={control}
                 name="type"
                 render={({ field: { ref: _ref, onChange, ...rest } }) => (
                   <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger>
                       <SelectValue id="type" placeholder="Select a type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -428,17 +538,21 @@ const EditKit = (props: EditKitProps) => {
                   </Select>
                 )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="Status" className="text-right">
-                Status
-              </Label>
+            </TableCell>
+          )}
+        </TableRow>
+        <TableRow>
+          <TableCell className="font-bold">Status</TableCell>
+          {!props.editing ? (
+            <TableCell>{getStatusByCode(props.kit.status)?.label}</TableCell>
+          ) : (
+            <TableCell>
               <Controller
                 control={control}
                 name="status"
                 render={({ field: { ref: _ref, onChange, ...rest } }) => (
                   <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger>
                       <SelectValue id="status" placeholder="Select a status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -454,30 +568,92 @@ const EditKit = (props: EditKitProps) => {
                   </Select>
                 )}
               />
-            </div>
-          </div>
-          <SheetFooter>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={deleteKit}
-              disabled={isSubmitting || isDeleting}
+            </TableCell>
+          )}
+        </TableRow>
+      </TableBody>
+    </Table>
+  );
+};
+
+interface KitActionsProps {
+  kit: Kit;
+  setEditing: Dispatch<SetStateAction<boolean>>;
+  editing: boolean;
+}
+
+const KitActions = (props: KitActionsProps) => {
+  const router = useRouter();
+  const utils = api.useContext();
+
+  const { mutate: addToBacklog, isLoading: addingToBacklog } =
+    api.kit.addToBacklog.useMutation({
+      onSuccess() {
+        return utils.kit.invalidate();
+      },
+    });
+
+  const { mutate: removeFromBacklog, isLoading: removingFromBacklog } =
+    api.kit.removeFromBacklog.useMutation({
+      onSuccess() {
+        return utils.kit.invalidate();
+      },
+    });
+
+  const { mutate: deleteKit, isLoading: isDeleting } =
+    api.kit.deleteKit.useMutation({
+      onSuccess() {
+        void utils.kit.invalidate();
+        void router.push("/collection");
+      },
+    });
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-8 w-8 p-0 data-[state=open]:bg-muted"
+        >
+          <MoreVertical className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem onClick={() => props.setEditing(true)}>
+          <Pen className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+          Edit Kit
+        </DropdownMenuItem>
+        {props.kit.status === "OWNED" && props.kit.type === "MODEL" ? (
+          props.kit.backlogOrder == null ? (
+            <DropdownMenuItem
+              onClick={() => addToBacklog(props.kit.id)}
+              disabled={addingToBacklog}
             >
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Delete Kit
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Update Kit
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+              <PlusSquare className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+              Backlog
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              onClick={() => removeFromBacklog(props.kit.id)}
+              disabled={removingFromBacklog}
+            >
+              <MinusSquare className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+              Backlog
+            </DropdownMenuItem>
+          )
+        ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="group focus:bg-destructive focus:text-destructive-foreground"
+          onClick={() => deleteKit(props.kit.id)}
+          disabled={isDeleting}
+        >
+          <Trash className="mr-2 h-3.5 w-3.5 text-muted-foreground/70 group-focus:text-destructive-foreground" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

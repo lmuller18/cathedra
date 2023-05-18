@@ -1,7 +1,10 @@
-import { type Kit } from "@prisma/client";
-import { type VariantProps, cva } from "class-variance-authority";
+import type { ReactNode } from "react";
+import { cva } from "class-variance-authority";
 import { Home, Gift, Truck, Hammer } from "lucide-react";
-import { type ReactNode } from "react";
+import type { VariantProps } from "class-variance-authority";
+
+import type { Kit } from "@prisma/client";
+
 import { cn } from "~/lib/utils";
 
 const progressStepperVariants = cva(

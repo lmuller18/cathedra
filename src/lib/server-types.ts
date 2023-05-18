@@ -36,11 +36,13 @@ export const CreateKitSchema = z.object({
   status: z
     .string({ required_error: "Status is required" })
     .min(1, { message: "Status is required" }),
-  image: z.string().nullable().optional(),
   series: z
     .string({ required_error: "Series is required" })
     .min(1, { message: "Series is required" }),
   type: z
     .string({ required_error: "Type is required" })
     .min(1, { message: "Type is required" }),
+  image: z
+    .string({ required_error: "Image is required" })
+    .min(1, { message: "Image is required" }),
 });

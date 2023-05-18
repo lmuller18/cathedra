@@ -1,6 +1,11 @@
-/** server/uploadthing.ts */
-import { createFilething, type FileRouter } from "uploadthing/server";
-const f = createFilething();
+import { getServerSession } from "next-auth";
+
+import type { FileRouter } from "uploadthing/next-legacy";
+import { createUploadthing } from "uploadthing/next-legacy";
+
+import { authOptions } from "./auth";
+
+const f = createUploadthing();
 
 // const auth = (req: Request) => ({ id: "fakeId" }); // Fake auth function
 
@@ -11,16 +16,23 @@ export const uploadRouter = {
     // Set permissions and file types for this FileRoute
     .fileTypes(["image"])
     .maxSize("32MB")
-    // .middleware(async (req) => {
-    //   // This code runs on your server before upload
-    //   const user = await auth(req);
-
-    //   // If you throw, the user will not be able to upload
-    //   if (!user) throw new Error("Unauthorized");
-
-    //   // Whatever is returned here is accessible in onUploadComplete as `metadata`
-    //   return { userId: user.id };
-    // })
+    .middleware(async (req, res) => {
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) throw new Error("Unauthorized");
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(() => {
+      // This code RUNS ON YOUR SERVER after upload
+      console.log("Upload complete");
+    }),
+  editKitImage: f
+    .fileTypes(["image"])
+    .maxSize("32MB")
+    .middleware(async (req, res) => {
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) throw new Error("Unauthorized");
+      return { userId: session.user.id };
+    })
     .onUploadComplete(() => {
       // This code RUNS ON YOUR SERVER after upload
       console.log("Upload complete");

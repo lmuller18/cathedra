@@ -1,20 +1,21 @@
 import Image from "next/image";
-import { type Kit } from "@prisma/client";
+import { ArrowBigUp, ArrowBigDown } from "lucide-react";
+
+import type { Kit } from "@prisma/client";
 
 import { getTypeByCode } from "~/lib/utils";
 
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import { AspectRatio } from "./ui/aspect-ratio";
 import {
   Card,
-  CardContent,
+  CardTitle,
   CardFooter,
   CardHeader,
-  CardTitle,
+  CardContent,
 } from "./ui/card";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { ArrowBigDown, ArrowBigUp } from "lucide-react";
+import { Separator } from "./ui/separator";
+import { AspectRatio } from "./ui/aspect-ratio";
 
 interface BacklogCardProps {
   kit: Kit;

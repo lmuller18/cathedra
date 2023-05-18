@@ -1,12 +1,14 @@
 import Image from "next/image";
-import { type Kit } from "@prisma/client";
+
+import type { Kit } from "@prisma/client";
+
+import { getTypeByCode } from "~/lib/utils";
 
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { AspectRatio } from "./ui/aspect-ratio";
 import ProgressStepper from "./progress-stepper";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { getTypeByCode } from "~/lib/utils";
+import { Card, CardTitle, CardHeader, CardContent } from "./ui/card";
 
 interface CollectionCardProps {
   kit: Kit;

@@ -1,32 +1,12 @@
-import { useState } from "react";
-
 import Head from "next/head";
 import Link from "next/link";
-import { type NextPage } from "next";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { type CheckedState } from "@radix-ui/react-checkbox";
-import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
-
-import { Controller, useForm } from "react-hook-form";
+import type { NextPage } from "next";
+import React, { useState } from "react";
 import { PlusSquare, MinusSquare } from "lucide-react";
 
-import { type RouterInputs, api } from "~/utils/api";
-import { getServerAuthSession } from "~/server/auth";
-import { CreateKitSchema } from "~/lib/server-types";
-import { GRADES, SCALES, SERIES, STATUSES, TYPES } from "~/lib/utils";
+import type { CheckedState } from "@radix-ui/react-checkbox";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 
-import Nav from "~/components/nav";
-import CollectionCard from "~/components/collection-card";
-
-import { Input } from "~/ui/input";
-import { Label } from "~/ui/label";
-import { Button } from "~/ui/button";
-import { Checkbox } from "~/ui/checkbox";
-import { Skeleton } from "~/ui/skeleton";
-import { Separator } from "~/ui/separator";
-import { ScrollArea } from "~/ui/scroll-area";
-import { AspectRatio } from "~/ui/aspect-ratio";
 import {
   Card,
   CardTitle,
@@ -39,24 +19,20 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/ui/collapsible";
-import {
-  Select,
-  SelectItem,
-  SelectGroup,
-  SelectLabel,
-  SelectValue,
-  SelectContent,
-  SelectTrigger,
-} from "~/ui/select";
-import {
-  Sheet,
-  SheetTitle,
-  SheetFooter,
-  SheetHeader,
-  SheetContent,
-  SheetTrigger,
-  SheetDescription,
-} from "~/ui/sheet";
+import { api } from "~/utils/api";
+import Nav from "~/components/nav";
+import { Label } from "~/ui/label";
+import { Button } from "~/ui/button";
+import { Checkbox } from "~/ui/checkbox";
+import { Skeleton } from "~/ui/skeleton";
+import { Separator } from "~/ui/separator";
+import { ScrollArea } from "~/ui/scroll-area";
+import { AspectRatio } from "~/ui/aspect-ratio";
+import type { RouterInputs } from "~/utils/api";
+import { getServerAuthSession } from "~/server/auth";
+import AddKitSheet from "~/components/add-kit-sheet";
+import CollectionCard from "~/components/collection-card";
+import { TYPES, GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
 
 const Collection: NextPage = () => {
   const [page, setPage] = useState(0);
@@ -325,7 +301,9 @@ const Collection: NextPage = () => {
           <div className="mb-4 flex items-center justify-between">
             <h1 className="inline text-2xl font-bold">Collection</h1>
 
-            <AddKit />
+            <AddKitSheet>
+              <Button>Add Kit</Button>
+            </AddKitSheet>
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {!isLoadingKits && (!kitData || kitData.kits.length === 0) && (
@@ -338,7 +316,9 @@ const Collection: NextPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter className="justify-end">
-                  <AddKit />
+                  <AddKitSheet>
+                    <Button>Add Kit</Button>
+                  </AddKitSheet>
                 </CardFooter>
               </Card>
             )}
@@ -395,269 +375,6 @@ const FilterExpansionToggle = (props: FilterExpansionToggleProps) => {
         {props.expanded ? <MinusSquare size={16} /> : <PlusSquare size={16} />}
       </button>
     </CollapsibleTrigger>
-  );
-};
-
-const AddKit = () => {
-  const [open, setOpen] = useState(false);
-  const utils = api.useContext();
-  const { mutate } = api.kit.createKit.useMutation({
-    onSuccess() {
-      handleOpenChange(false);
-      return utils.kit.invalidate();
-    },
-  });
-
-  const { register, handleSubmit, control, formState, reset } = useForm<
-    RouterInputs["kit"]["createKit"]
-  >({
-    resolver: zodResolver(CreateKitSchema),
-    defaultValues: {
-      type: "MODEL",
-    },
-  });
-
-  const onSubmit = (data: RouterInputs["kit"]["updateKit"]["kit"]) => {
-    const image = data.image;
-    mutate({
-      ...data,
-      image: image && image.length ? image : null,
-    });
-  };
-
-  const handleOpenChange = (o: boolean) => {
-    if (!o) reset();
-    setOpen(o);
-  };
-
-  return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
-        <Button>Add Kit</Button>
-      </SheetTrigger>
-      <SheetContent position="right" className="w-full sm:w-[420px]">
-        <SheetHeader>
-          <SheetTitle>Add kit</SheetTitle>
-          <SheetDescription>
-            Add a gundam kit to your collection. Click save when you&apos;re
-            done.
-          </SheetDescription>
-        </SheetHeader>
-        <form
-          onSubmit={(e) =>
-            void handleSubmit(onSubmit, (err) => console.error(err))(e)
-          }
-        >
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                {...register("name")}
-                placeholder="Kit name"
-                className="col-span-3"
-              />
-            </div>
-            {formState.errors.name && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.name.message}
-                </span>
-              </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Image
-              </Label>
-              <Input
-                id="image"
-                {...register("image")}
-                placeholder="Image link"
-                className="col-span-3"
-              />
-            </div>
-            {formState.errors.image && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.image.message}
-                </span>
-              </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="grade" className="text-right">
-                Grade
-              </Label>
-              <Controller
-                control={control}
-                name="grade"
-                render={({ field: { ref: _ref, onChange, ...rest } }) => (
-                  <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue id="grade" placeholder="Select a grade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Grades</SelectLabel>
-                        {GRADES.map((grades) => (
-                          <SelectItem key={grades.code} value={grades.code}>
-                            {grades.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            {formState.errors.grade && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.grade.message}
-                </span>
-              </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="series" className="text-right">
-                Series
-              </Label>
-              <Controller
-                control={control}
-                name="series"
-                render={({ field: { ref: _ref, onChange, ...rest } }) => (
-                  <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue id="series" placeholder="Select a series" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Series</SelectLabel>
-                        {SERIES.map((series) => (
-                          <SelectItem key={series.code} value={series.code}>
-                            {series.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            {formState.errors.series && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.series.message}
-                </span>
-              </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="scale" className="text-right">
-                Scale
-              </Label>
-              <Controller
-                control={control}
-                name="scale"
-                render={({ field: { ref: _ref, onChange, ...rest } }) => (
-                  <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue id="scale" placeholder="Select a scale" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Scales</SelectLabel>
-                        {SCALES.map((scale) => (
-                          <SelectItem key={scale.code} value={scale.code}>
-                            {scale.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            {formState.errors.scale && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.scale.message}
-                </span>
-              </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
-                Type
-              </Label>
-              <Controller
-                control={control}
-                name="type"
-                render={({ field: { ref: _ref, onChange, ...rest } }) => (
-                  <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue id="type" placeholder="Select a type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Types</SelectLabel>
-                        {TYPES.map((type) => (
-                          <SelectItem key={type.code} value={type.code}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            {formState.errors.type && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.type.message}
-                </span>
-              </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="Status" className="text-right">
-                Status
-              </Label>
-              <Controller
-                control={control}
-                name="status"
-                render={({ field: { ref: _ref, onChange, ...rest } }) => (
-                  <Select onValueChange={onChange} {...rest}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue id="status" placeholder="Select a status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Status</SelectLabel>
-                        {STATUSES.map((status) => (
-                          <SelectItem key={status.code} value={status.code}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            {formState.errors.status && (
-              <div className="-mt-2 grid grid-cols-4 items-center gap-4">
-                <span className="col-span-3 col-start-2 text-sm text-destructive-foreground">
-                  {formState.errors.status.message}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <SheetFooter>
-            <Button type="submit">Create Kit</Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
   );
 };
 

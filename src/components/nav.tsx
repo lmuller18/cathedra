@@ -3,10 +3,6 @@ import { Home, Twitch, LogOut } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 import { cn } from "~/lib/utils";
-import NavLink from "~/components/ui/nav-link";
-import { Button } from "~/components/ui/button";
-import { Skeleton } from "~/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -15,6 +11,10 @@ import {
   DropdownMenuContent,
   DropdownMenuSeparator,
 } from "~/components/ui/dropdown-menu";
+import NavLink from "~/components/ui/nav-link";
+import { Button } from "~/components/ui/button";
+import { Skeleton } from "~/components/ui/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
 
 const Nav = () => (
   <div className="border-b">
