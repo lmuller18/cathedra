@@ -45,6 +45,7 @@ import {
   getScaleByCode,
   getSeriesByCode,
   getStatusByCode,
+  PLACEHOLDER_IMAGE,
 } from "~/lib/utils";
 import {
   Select,
@@ -127,7 +128,7 @@ const KitPage: NextPage = () => {
                     <Link href={`/collection/${kit.id}`}>
                       <div className="overflow-hidden rounded-md">
                         <Image
-                          src={kit.image ?? "/images/gundam-placeholder.png"}
+                          src={kit.image ?? PLACEHOLDER_IMAGE}
                           alt={kit.name}
                           width={250}
                           height={330}
@@ -208,14 +209,14 @@ const KitDetails = (props: KitDetailsProps) => {
           >
             <Image
               fill
-              src={props.kit.image ?? "/images/gundam-placeholder.png"}
+              src={props.kit.image ?? PLACEHOLDER_IMAGE}
               className="object-cover"
               alt={props.kit.name}
             />
           </AspectRatio>
         ) : (
           <EditKitImage
-            image={props.kit.image ?? "/images/gundam-placeholder.png"}
+            image={props.kit.image ?? PLACEHOLDER_IMAGE}
             kitId={props.kit.id}
             setEditing={setEditing}
           />

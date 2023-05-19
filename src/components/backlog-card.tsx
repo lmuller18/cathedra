@@ -3,7 +3,7 @@ import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 
 import type { Kit } from "@prisma/client";
 
-import { getTypeByCode } from "~/lib/utils";
+import { getTypeByCode, PLACEHOLDER_IMAGE } from "~/lib/utils";
 
 import {
   Card,
@@ -25,14 +25,14 @@ interface BacklogCardProps {
 
 const BacklogCard = (props: BacklogCardProps) => {
   return (
-    <Card className="flex w-[300px] flex-col overflow-hidden">
+    <Card className="flex flex-col overflow-hidden">
       <AspectRatio
         ratio={4 / 3}
         className="overflow-hidden bg-muted-foreground"
       >
         <Image
           fill
-          src={props.kit.image ?? "/images/gundam-placeholder.png"}
+          src={props.kit.image ?? PLACEHOLDER_IMAGE}
           className="object-cover transition-all hover:scale-105"
           alt={props.kit.name}
         />

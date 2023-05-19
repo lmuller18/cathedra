@@ -108,9 +108,9 @@ export const kitRouter = createTRPCRouter({
         status: input.statuses?.length ? { in: input.statuses } : undefined,
         type: input.types?.length ? { in: input.types } : undefined,
         backlogOrder:
-          input.includeBacklog != null || input.includeBacklog
-            ? undefined
-            : { equals: null },
+          input.includeBacklog != null && input.includeBacklog === false
+            ? { equals: null }
+            : undefined,
       };
 
       const [kits, count] = await ctx.prisma.$transaction([

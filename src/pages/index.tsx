@@ -2,97 +2,29 @@ import Head from "next/head";
 import Link from "next/link";
 import type { NextPage } from "next";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, MotionConfig } from "framer-motion";
 
 import Nav from "~/components/nav";
 import { Button } from "~/components/ui/button";
 import CollectionCard from "~/components/collection-card";
 
-const TestSection = () => {
+const Home: NextPage = () => {
   return (
-    <section className="w-full bg-gray-100 py-12">
-      <div className="container">
-        <div className="lg:text-center">
-          <h2 className="text-base font-semibold uppercase tracking-wide text-indigo-600">
-            Featured Models
-          </h2>
-          <p className="mt-2 text-3xl font-extrabold leading-8 tracking-tight text-gray-900 sm:text-4xl">
-            Check out some of our top picks!
-          </p>
-          <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-            Lorem ipsum dolor sit amet consect adipisicing elit. Possimus magnam
-            voluptatum cupiditate veritatis in accusamus quisquam.
-          </p>
-        </div>
-
-        <div className="mt-10">
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Model Card */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={kits[2]?.image}
-                  alt="Gundam Model"
-                  className="h-56 w-full object-cover object-center"
-                />
-              </div>
-              <div className="mt-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  RG Strike Freedom Gundam
-                </h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Real Grade 1/144 Scale
-                </p>
-                <p className="mt-1 text-sm text-gray-600">MSRP: $29.99</p>
-              </div>
-            </div>
-
-            {/* Model Card */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={kits[0]?.image}
-                  alt="Gundam Model"
-                  className="h-56 w-full object-cover object-center"
-                />
-              </div>
-              <div className="mt-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  MG Gundam Deathscythe Hell
-                </h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  Master Grade 1/100 Scale
-                </p>
-                <p className="mt-1 text-sm text-gray-600">MSRP: $49.99</p>
-              </div>
-            </div>
-
-            {/* Model Card */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={kits[1]?.image}
-                  alt="Gundam Model"
-                  className="h-56 w-full object-cover object-center"
-                />
-              </div>
-              <div className="mt-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  HGUC Sinanju Stein Narrative Ver.
-                </h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  High Grade Universal Century 1/144 Scale
-                </p>
-                <p className="mt-1 text-sm text-gray-600">MSRP: $26.99</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <>
+      <Head>
+        <title>Cathedra | Gundam Tracker</title>
+        <meta
+          name="description"
+          content="Gundam collection and backlog tracker"
+        />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <Nav />
+      <main className="flex min-h-screen flex-col items-center justify-center">
+        <HeroSection />
+        <AboutSection />
+      </main>
+    </>
   );
 };
 
@@ -102,15 +34,13 @@ const HeroSection = () => {
     const interval = setInterval(
       () =>
         setActiveIndex((activeIndex) =>
-          activeIndex + 1 >= kits.length ? 0 : activeIndex + 1
+          activeIndex + 1 >= KITS.length ? 0 : activeIndex + 1
         ),
       5000
     );
 
     return () => clearInterval(interval);
   }, []);
-
-  const selectedModel = kits[activeIndex % kits.length];
 
   return (
     <section className="w-full py-16">
@@ -147,28 +77,26 @@ const HeroSection = () => {
           </div>
           <div className="relative lg:w-1/2">
             <div className="ml-auto h-[419px] w-[350px]">
-              <AnimatePresence>
-                {selectedModel && (
-                  <motion.div
-                    key={selectedModel.id}
-                    initial={{ x: 100, opacity: 0, position: "absolute" }}
-                    animate={{
-                      x: 0,
-                      opacity: 1,
-                      position: "static",
-                      transition: { duration: 0.6 },
-                    }}
-                    exit={{
-                      x: -100,
-                      opacity: 0,
-                      position: "absolute",
-                      transition: { duration: 0.3 },
-                    }}
-                  >
-                    <CollectionCard kit={selectedModel} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <MotionConfig
+                transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+              >
+                <div>
+                  <div className="mx-auto flex h-full max-w-7xl flex-col justify-center">
+                    <div className="relative overflow-hidden">
+                      <motion.div
+                        animate={{ x: `-${activeIndex * 100}%` }}
+                        className="flex"
+                      >
+                        {KITS.map((kit) => (
+                          <div key={kit.id} className="w-[350px] flex-shrink-0">
+                            <CollectionCard kit={kit} />
+                          </div>
+                        ))}
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </MotionConfig>
             </div>
           </div>
         </div>
@@ -221,7 +149,52 @@ const AboutSection = () => {
   );
 };
 
-const kits = [
+const CollectionDemo = () => {
+  return (
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <CollectionCard
+        kit={{
+          id: "3",
+          userId: "1",
+          name: "RG ZGMF-X20A Strike Freedom Gundam",
+          image: "/images/rg_strike_freedom_gundam.jpeg",
+          grade: "RG",
+          scale: "1/144",
+          series: "SEED",
+          status: "ORDERED",
+          type: "MODEL",
+          link: null,
+          releaseDate: null,
+          orderedDate: null,
+          backlogOrder: null,
+          createdAt: new Date("1/1/23"),
+          updatedAt: new Date("1/1/23"),
+        }}
+      />
+      <CollectionCard
+        kit={{
+          id: "3",
+          userId: "1",
+          name: "HG Sinanju Stein [Narrative Ver.]",
+          image: "/images/hg_sinanju_stein.png",
+          grade: "HF",
+          scale: "1/144",
+          series: "UC",
+          status: "ASSEMBLED",
+          type: "MODEL",
+          link: null,
+          releaseDate: null,
+          orderedDate: null,
+          backlogOrder: null,
+          createdAt: new Date("1/1/23"),
+          updatedAt: new Date("1/1/23"),
+        }}
+      />
+    </div>
+  );
+};
+
+const KITS = [
   {
     id: "1",
     userId: "1",
@@ -274,73 +247,5 @@ const kits = [
     updatedAt: new Date("1/1/23"),
   },
 ] as const;
-
-const CollectionDemo = () => {
-  return (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-      <CollectionCard
-        kit={{
-          id: "3",
-          userId: "1",
-          name: "RG ZGMF-X20A Strike Freedom Gundam",
-          image: "/images/rg_strike_freedom_gundam.jpeg",
-          grade: "RG",
-          scale: "1/144",
-          series: "SEED",
-          status: "ORDERED",
-          type: "MODEL",
-          link: null,
-          releaseDate: null,
-          orderedDate: null,
-          backlogOrder: null,
-          createdAt: new Date("1/1/23"),
-          updatedAt: new Date("1/1/23"),
-        }}
-      />
-      <CollectionCard
-        kit={{
-          id: "3",
-          userId: "1",
-          name: "HG Sinanju Stein [Narrative Ver.]",
-          image: "/images/hg_sinanju_stein.png",
-          grade: "HF",
-          scale: "1/144",
-          series: "UC",
-          status: "ASSEMBLED",
-          type: "MODEL",
-          link: null,
-          releaseDate: null,
-          orderedDate: null,
-          backlogOrder: null,
-          createdAt: new Date("1/1/23"),
-          updatedAt: new Date("1/1/23"),
-        }}
-      />
-    </div>
-  );
-};
-
-const Home: NextPage = () => {
-  return (
-    <>
-      <Head>
-        <title>Cathedra | Gundam Tracker</title>
-        <meta
-          name="description"
-          content="Gundam collection and backlog tracker"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <Nav />
-      <main className="flex min-h-screen flex-col items-center justify-center">
-        <HeroSection />
-
-        <AboutSection />
-
-        <TestSection />
-      </main>
-    </>
-  );
-};
 
 export default Home;

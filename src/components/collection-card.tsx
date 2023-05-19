@@ -2,7 +2,7 @@ import Image from "next/image";
 
 import type { Kit } from "@prisma/client";
 
-import { getTypeByCode } from "~/lib/utils";
+import { getTypeByCode, PLACEHOLDER_IMAGE } from "~/lib/utils";
 
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
@@ -23,7 +23,7 @@ const CollectionCard = (props: CollectionCardProps) => {
       >
         <Image
           fill
-          src={props.kit.image ?? "/images/gundam-placeholder.png"}
+          src={props.kit.image ?? PLACEHOLDER_IMAGE}
           className="object-cover transition-all hover:scale-105"
           alt={props.kit.name}
         />

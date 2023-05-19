@@ -1,16 +1,11 @@
 import Link from "next/link";
+import Head from "next/head";
 import Image from "next/image";
-import { type NextPage } from "next";
-import { useMemo, useState } from "react";
-import { type Kit } from "@prisma/client";
+import type { NextPage } from "next";
+import { MinusSquare, MoreVertical, ArrowBigDownDash } from "lucide-react";
 
-import { getServerAuthSession } from "~/server/auth";
-import { type RouterInputs, api } from "~/utils/api";
-
-import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
-
-import Nav from "~/components/nav";
-import BacklogCard from "~/components/backlog-card";
+import type { Kit } from "@prisma/client";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import {
   Table,
@@ -20,9 +15,29 @@ import {
   TableHead,
   TableHeader,
 } from "~/ui/table";
-import { Badge } from "~/ui/badge";
+import {
+  getTypeByCode,
+  getGradeByCode,
+  getScaleByCode,
+  getSeriesByCode,
+  getStatusByCode,
+  PLACEHOLDER_IMAGE,
+} from "~/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "~/ui/dropdown-menu";
+import { api } from "~/utils/api";
+import Nav from "~/components/nav";
 import { Button } from "~/ui/button";
+import { useToast } from "~/ui/use-toast";
 import { ScrollArea } from "~/ui/scroll-area";
+import type { RouterInputs } from "~/utils/api";
+import { AspectRatio } from "~/ui/aspect-ratio";
+import BacklogCard from "~/components/backlog-card";
+import { getServerAuthSession } from "~/server/auth";
 
 const BacklogPage: NextPage = () => {
   const utils = api.useContext();
@@ -43,65 +58,72 @@ const BacklogPage: NextPage = () => {
     });
 
   return (
-    <div className="flex flex-col">
-      <Nav />
+    <>
+      <Head>
+        <title>Backlog</title>
+        <meta name="description" content="My Gundam Kit Backlog" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <div>
+        <Nav />
 
-      <div className="container pt-8">
-        {loadingBacklog ? (
-          "Loading..."
-        ) : backlog ? (
-          <Backlog kits={backlog} />
-        ) : (
-          "No kits"
-        )}
+        <div>
+          {loadingBacklog ? (
+            "Loading..."
+          ) : backlog ? (
+            <Backlog kits={backlog} />
+          ) : (
+            "No kits"
+          )}
 
-        {!loadingNonBacklog && nonBacklog && nonBacklog.length > 0 && (
-          <>
-            <h3 className="mb-2 mt-8 scroll-m-20 text-2xl font-semibold tracking-tight">
-              Other
-            </h3>
-            <ScrollArea orientation="horizontal">
-              <div className="flex space-x-4 pb-4">
-                {nonBacklog?.map((kit) => (
-                  <div
-                    className="w-[150px] space-y-3 sm:w-[250px]"
-                    key={kit.id}
-                  >
-                    <Link href={`/collection/${kit.id}`}>
-                      <div className="overflow-hidden rounded-md">
-                        <Image
-                          src={kit.image ?? "/images/gundam-placeholder.png"}
-                          alt={kit.name}
-                          width={250}
-                          height={250}
-                          className="aspect-square h-auto w-auto bg-muted-foreground object-cover transition-all hover:scale-105"
-                        />
-                      </div>
-                    </Link>
-                    <div className="space-y-2 text-sm">
+          {!loadingNonBacklog && nonBacklog && nonBacklog.length > 0 && (
+            <div className="container">
+              <h3 className="mb-2 mt-8 scroll-m-20 text-2xl font-semibold tracking-tight">
+                Other
+              </h3>
+              <ScrollArea orientation="horizontal">
+                <div className="flex space-x-4 pb-4">
+                  {nonBacklog?.map((kit) => (
+                    <div
+                      className="w-[150px] space-y-3 sm:w-[250px]"
+                      key={kit.id}
+                    >
                       <Link href={`/collection/${kit.id}`}>
-                        <h3 className="line-clamp-1 font-medium leading-none">
-                          {kit.name}
-                        </h3>
+                        <div className="overflow-hidden rounded-md">
+                          <Image
+                            src={kit.image ?? PLACEHOLDER_IMAGE}
+                            alt={kit.name}
+                            width={250}
+                            height={250}
+                            className="aspect-square h-auto w-auto bg-muted-foreground object-cover transition-all hover:scale-105"
+                          />
+                        </div>
                       </Link>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="secondary"
-                          onClick={() => addToBacklog(kit.id)}
-                          disabled={addingToBacklog}
-                        >
-                          Add to backlog
-                        </Button>
+                      <div className="space-y-2 text-sm">
+                        <Link href={`/collection/${kit.id}`}>
+                          <h3 className="line-clamp-1 font-medium leading-none">
+                            {kit.name}
+                          </h3>
+                        </Link>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="secondary"
+                            onClick={() => addToBacklog(kit.id)}
+                            disabled={addingToBacklog}
+                          >
+                            Add to backlog
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </>
-        )}
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -110,13 +132,7 @@ interface BacklogProps {
 }
 
 const Backlog = (props: BacklogProps) => {
-  const [featured] = props.kits;
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = useMemo(() => {
-    return selectedId === null
-      ? props.kits[0]
-      : props.kits.find((kit) => kit.id === selectedId);
-  }, [selectedId, props.kits]);
+  const [featured, ...rest] = props.kits;
   const { mutate: doReorder } = api.kit.updateBacklogOrder.useMutation();
   const utils = api.useContext();
 
@@ -147,71 +163,133 @@ const Backlog = (props: BacklogProps) => {
   if (!featured) return <div>No kits</div>;
 
   return (
-    <div>
-      <h1 className="mb-2 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-        Next Build
-      </h1>
-      <h2 className="w-fit scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-        {featured.name}
-      </h2>
+    <div className="sm:pt-8">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-2 sm:container sm:grid-cols-12">
+        <h2 className="container mb-4 mt-3 block scroll-m-20 text-3xl font-semibold tracking-tight sm:hidden">
+          Up Next: {featured.name}
+        </h2>
 
-      <h3 className="mb-2 mt-8 scroll-m-20 text-2xl font-semibold tracking-tight">
-        Backlog
-      </h3>
-      <ScrollArea orientation="horizontal">
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Series</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {props.kits.map((kit) => (
-                  <TableRow
-                    key={kit.id}
-                    onMouseEnter={() => setSelectedId(kit.id)}
-                    data-state={kit.id === selected?.id ? "selected" : ""}
-                  >
-                    <TableCell className="font-medium">
-                      <Button
-                        asChild
-                        variant="link"
-                        className="whitespace-nowrap"
-                      >
-                        <Link href={`/collection/${kit.id}`}>{kit.name}</Link>
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Badge>
-                        {kit.grade} {kit.scale}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{kit.series}</Badge>
-                    </TableCell>
-                    <TableCell className="w-full"></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <div>
-            {selected && (
-              <BacklogCard
-                kit={selected}
-                backlogCount={props.kits.length}
-                reorder={reorder}
-              />
-            )}
+        <div className="sm:col-span-5">
+          <AspectRatio
+            ratio={4 / 3}
+            className="overflow-hidden rounded-sm bg-muted-foreground"
+          >
+            <Image
+              fill
+              src={featured.image ?? PLACEHOLDER_IMAGE}
+              className="object-cover"
+              alt={featured.name}
+            />
+          </AspectRatio>
+        </div>
+        <div className="px-4 sm:col-span-7 sm:px-0">
+          <h2 className="mb-4 hidden scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight [text-wrap:balance] sm:mb-0 sm:block">
+            Up Next: {featured.name}
+          </h2>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-bold">Kit Info</TableHead>
+                <TableHead className="text-right">
+                  <FeaturedActions kit={featured} />
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-bold">Grade</TableCell>
+                <TableCell>{getGradeByCode(featured.grade)?.label}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Series</TableCell>
+                <TableCell>{getSeriesByCode(featured.series)?.name}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Scale</TableCell>
+                <TableCell>{getScaleByCode(featured.scale)?.label}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Type</TableCell>
+                <TableCell>{getTypeByCode(featured.type)?.label}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Status</TableCell>
+                <TableCell>{getStatusByCode(featured.status)?.label}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {rest.length && (
+        <div className="container mt-4">
+          <h2 className="mb-4 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">
+            Backlog
+          </h2>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
+            {rest.map((kit) => (
+              <div key={kit.id}>
+                <BacklogCard
+                  kit={kit}
+                  backlogCount={props.kits.length}
+                  reorder={reorder}
+                />
+              </div>
+            ))}
           </div>
         </div>
-      </ScrollArea>
+      )}
     </div>
+  );
+};
+
+interface FeaturedActionsProps {
+  kit: Kit;
+}
+
+const FeaturedActions = (props: FeaturedActionsProps) => {
+  const { toast } = useToast();
+  const utils = api.useContext();
+
+  const { mutate: removeFromBacklog, isLoading: removingFromBacklog } =
+    api.kit.removeFromBacklog.useMutation({
+      onSuccess() {
+        toast({
+          title: "Kit removed from backlog",
+        });
+        return utils.kit.invalidate();
+      },
+    });
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-8 w-8 p-0 data-[state=open]:bg-muted"
+        >
+          <MoreVertical className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem
+          onClick={() => removeFromBacklog(props.kit.id)}
+          disabled={removingFromBacklog}
+        >
+          <MinusSquare className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+          Backlog
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => removeFromBacklog(props.kit.id)}
+          disabled={removingFromBacklog}
+        >
+          <ArrowBigDownDash className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+          Move Down
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
