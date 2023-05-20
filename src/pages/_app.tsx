@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 
 import "~/styles/globals.css";
 import { api } from "~/utils/api";
-import { Toaster } from "~/components/ui/toaster";
+import { Toaster } from "~/elements/toaster";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,

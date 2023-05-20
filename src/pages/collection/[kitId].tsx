@@ -27,14 +27,6 @@ import { generateReactHelpers } from "@uploadthing/react/hooks";
 import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import {
-  Table,
-  TableRow,
-  TableBody,
-  TableHead,
-  TableCell,
-  TableHeader,
-} from "~/ui/table";
-import {
   TYPES,
   GRADES,
   SCALES,
@@ -48,6 +40,14 @@ import {
   PLACEHOLDER_IMAGE,
 } from "~/lib/utils";
 import {
+  Table,
+  TableRow,
+  TableBody,
+  TableHead,
+  TableCell,
+  TableHeader,
+} from "~/elements/table";
+import {
   Select,
   SelectItem,
   SelectGroup,
@@ -55,28 +55,28 @@ import {
   SelectValue,
   SelectContent,
   SelectTrigger,
-} from "~/ui/select";
+} from "~/elements/select";
 import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "~/ui/dropdown-menu";
+} from "~/elements/dropdown-menu";
 import { api } from "~/utils/api";
 import Nav from "~/components/nav";
-import { Badge } from "~/ui/badge";
-import { Input } from "~/ui/input";
-import { Button } from "~/ui/button";
-import { useToast } from "~/ui/use-toast";
-import { AspectRatio } from "~/ui/aspect-ratio";
+import { Badge } from "~/elements/badge";
+import { Input } from "~/elements/input";
+import { Button } from "~/elements/button";
+import { useToast } from "~/elements/use-toast";
 import type { RouterInputs } from "~/utils/api";
 import { getServerAuthSession } from "~/server/auth";
+import { AspectRatio } from "~/elements/aspect-ratio";
 import { UpdateKitKitSchema } from "~/lib/server-types";
-import { ScrollBar, ScrollArea } from "~/ui/scroll-area";
 import type { UploadRouter } from "~/server/uploadthing";
 import UploadDropzone from "~/components/upload-dropzone";
-import { Card, CardTitle, CardHeader, CardDescription } from "~/ui/card";
+import { ScrollBar, ScrollArea } from "~/elements/scroll-area";
+import { Card, CardTitle, CardHeader, CardDescription } from "~/elements/card";
 
 const { useUploadThing } = generateReactHelpers<UploadRouter>();
 

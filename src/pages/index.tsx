@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { motion, MotionConfig } from "framer-motion";
 
 import Nav from "~/components/nav";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/elements/button";
 import CollectionCard from "~/components/collection-card";
 
 const Home: NextPage = () => {

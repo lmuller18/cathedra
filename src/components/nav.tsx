@@ -10,11 +10,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuSeparator,
-} from "~/components/ui/dropdown-menu";
-import NavLink from "~/components/ui/nav-link";
-import { Button } from "~/components/ui/button";
-import { Skeleton } from "~/components/ui/skeleton";
-import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
+} from "~/elements/dropdown-menu";
+import NavLink from "~/elements/nav-link";
+import { Button } from "~/elements/button";
+import { Skeleton } from "~/elements/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "~/elements/avatar";
 
 const Nav = () => (
   <div className="border-b">

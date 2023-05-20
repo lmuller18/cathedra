@@ -8,12 +8,6 @@ import { useState, useEffect, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { generateReactHelpers } from "@uploadthing/react/hooks";
 
-import { api } from "~/utils/api";
-import type { RouterInputs } from "~/utils/api";
-import { CreateKitSchema } from "~/lib/server-types";
-import type { UploadRouter } from "~/server/uploadthing";
-import { TYPES, GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
-
 import {
   Sheet,
   SheetTitle,
@@ -22,7 +16,7 @@ import {
   SheetContent,
   SheetTrigger,
   SheetDescription,
-} from "./ui/sheet";
+} from "~/elements/sheet";
 import {
   Select,
   SelectItem,
@@ -31,12 +25,18 @@ import {
   SelectValue,
   SelectContent,
   SelectTrigger,
-} from "./ui/select";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+} from "~/elements/select";
+import { api } from "~/utils/api";
+import { Label } from "~/elements/label";
+import { Input } from "~/elements/input";
+import { Button } from "~/elements/button";
+import type { RouterInputs } from "~/utils/api";
+import { CreateKitSchema } from "~/lib/server-types";
+import { AspectRatio } from "~/elements/aspect-ratio";
+import type { UploadRouter } from "~/server/uploadthing";
+import { TYPES, GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
+
 import UploadDropzone from "./upload-dropzone";
-import { AspectRatio } from "./ui/aspect-ratio";
 
 const { useUploadThing } = generateReactHelpers<UploadRouter>();
 

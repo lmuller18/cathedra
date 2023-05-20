@@ -2,13 +2,13 @@ import Image from "next/image";
 
 import type { Kit } from "@prisma/client";
 
+import { Badge } from "~/elements/badge";
+import { Separator } from "~/elements/separator";
+import { AspectRatio } from "~/elements/aspect-ratio";
 import { getTypeByCode, PLACEHOLDER_IMAGE } from "~/lib/utils";
+import { Card, CardTitle, CardHeader, CardContent } from "~/elements/card";
 
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import { AspectRatio } from "./ui/aspect-ratio";
 import ProgressStepper from "./progress-stepper";
-import { Card, CardTitle, CardHeader, CardContent } from "./ui/card";
 
 interface CollectionCardProps {
   kit: Kit;

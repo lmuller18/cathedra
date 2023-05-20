@@ -3,19 +3,18 @@ import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 
 import type { Kit } from "@prisma/client";
 
-import { getTypeByCode, PLACEHOLDER_IMAGE } from "~/lib/utils";
-
 import {
   Card,
   CardTitle,
   CardFooter,
   CardHeader,
   CardContent,
-} from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
-import { AspectRatio } from "./ui/aspect-ratio";
+} from "~/elements/card";
+import { Badge } from "~/elements/badge";
+import { Button } from "~/elements/button";
+import { Separator } from "~/elements/separator";
+import { AspectRatio } from "~/elements/aspect-ratio";
+import { getTypeByCode, PLACEHOLDER_IMAGE } from "~/lib/utils";
 
 interface BacklogCardProps {
   kit: Kit;

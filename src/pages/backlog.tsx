@@ -8,14 +8,6 @@ import type { Kit } from "@prisma/client";
 import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import {
-  Table,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-} from "~/ui/table";
-import {
   getTypeByCode,
   getGradeByCode,
   getScaleByCode,
@@ -24,20 +16,28 @@ import {
   PLACEHOLDER_IMAGE,
 } from "~/lib/utils";
 import {
+  Table,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+} from "~/elements/table";
+import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "~/ui/dropdown-menu";
+} from "~/elements/dropdown-menu";
 import { api } from "~/utils/api";
 import Nav from "~/components/nav";
-import { Button } from "~/ui/button";
-import { useToast } from "~/ui/use-toast";
-import { ScrollArea } from "~/ui/scroll-area";
+import { Button } from "~/elements/button";
+import { useToast } from "~/elements/use-toast";
 import type { RouterInputs } from "~/utils/api";
-import { AspectRatio } from "~/ui/aspect-ratio";
+import { ScrollArea } from "~/elements/scroll-area";
 import BacklogCard from "~/components/backlog-card";
 import { getServerAuthSession } from "~/server/auth";
+import { AspectRatio } from "~/elements/aspect-ratio";
 
 const BacklogPage: NextPage = () => {
   const utils = api.useContext();

@@ -13,24 +13,24 @@ import {
   CardFooter,
   CardHeader,
   CardDescription,
-} from "~/ui/card";
+} from "~/elements/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "~/ui/collapsible";
+} from "~/elements/collapsible";
 import { api } from "~/utils/api";
 import Nav from "~/components/nav";
-import { Label } from "~/ui/label";
-import { Button } from "~/ui/button";
-import { Checkbox } from "~/ui/checkbox";
-import { Skeleton } from "~/ui/skeleton";
-import { Separator } from "~/ui/separator";
-import { ScrollArea } from "~/ui/scroll-area";
-import { AspectRatio } from "~/ui/aspect-ratio";
+import { Label } from "~/elements/label";
+import { Button } from "~/elements/button";
+import { Checkbox } from "~/elements/checkbox";
+import { Skeleton } from "~/elements/skeleton";
 import type { RouterInputs } from "~/utils/api";
+import { Separator } from "~/elements/separator";
+import { ScrollArea } from "~/elements/scroll-area";
 import { getServerAuthSession } from "~/server/auth";
 import AddKitSheet from "~/components/add-kit-sheet";
+import { AspectRatio } from "~/elements/aspect-ratio";
 import CollectionCard from "~/components/collection-card";
 import { TYPES, GRADES, SCALES, SERIES, STATUSES } from "~/lib/utils";
 
