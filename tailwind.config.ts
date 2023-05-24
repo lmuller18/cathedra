@@ -5,6 +5,7 @@ export default {
   content: [
     "./src/pages/**/*.{ts,tsx}",
     "./src/components/**/*.{ts,tsx}",
+    "./src/elements/**/*.{ts,tsx}",
     "./src/app/**/*.{ts,tsx}",
   ],
   theme: {
